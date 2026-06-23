@@ -1,0 +1,116 @@
+COMO USAR O CONTROLE DE DOCAS - PM / SAME DAY
+
+1. Abra o arquivo ondas-pm-sameday.html no navegador.
+2. Clique em "Editar dados", no canto superior direito.
+3. Cole os dados da Extracao no campo "Extracao".
+4. Cole as rotas carregadas ou expedidas no campo "Base".
+5. Clique em "Aplicar".
+
+Este projeto e uma copia separada do Controle de Ondas AM. Ele trabalha somente com os ciclos PM e SD.
+
+
+CICLOS E HORARIOS
+
+PM:
+
+- PM Onda 01: 13:20 ate 13:50 h
+- PM Onda 02: 13:50 ate 14:15 h
+- PM Onda 03: 14:15 ate 14:35 h
+
+SD:
+
+- SD Onda 01: 17:10 ate 17:30 h
+- SD Onda 02: 17:30 ate 18:00 h
+- SD Onda 03: 18:00 ate 18:30 h
+
+
+EXTRACAO
+
+A Extracao monta as rotas nas docas e ondas.
+
+Para PM, se a linha vier apenas como "Onda 1", o painel entende como PM por padrao.
+Rotas com nomenclatura "_PM1", como D2_PM1, tambem sao identificadas como PM.
+
+Exemplo PM:
+
+PM Onda 1    VP11_AM1    1    FLYPACK
+PM Onda 2    VP10_AM1    2    Flight Cargo
+PM Onda 3    VA11_AM1    3    HAWK TRANSPORTES LTDA
+
+Para SD, a linha pode conter "SD", "Same Day", "Sameday" ou "SD101" para o painel separar corretamente do PM.
+Rotas com nomenclatura "_SD", como VN1_SD, tambem sao identificadas como SD.
+
+Exemplo SD:
+
+SD Onda 1    VN1_SD    52    UNICA TRANSPORTES
+SD Onda 2    VH2_SD    56    PANTERA LOG TRAN
+SD Onda 3    VL2_SD    60    PANTERA LOG TRAN
+
+Tambem aceita tabela completa com mais colunas. O painel ignora o que nao precisa.
+
+
+BASE
+
+A Base serve para informar quais rotas ja subiram o QR ou foram expedidas.
+
+Pode colar so a rota:
+
+VP11_AM1
+VP10_AM1
+VA11_AM1
+
+Ou pode colar a linha vinda do sistema com informacoes extras:
+
+VP11_AM1    Aduana em andamento    3 minutos    21 minutos    1
+VA11_AM1    Expedida    -    4 minutos    3
+
+O painel considera apenas:
+
+- Rota
+- Doca ou vaga
+- Onda
+- Transportadora
+- Expedida
+
+Todo o restante e ignorado.
+
+Se a mesma rota aparecer duplicada na Base, o cronometro nao reinicia.
+
+
+CORES DAS DOCAS
+
+- Vermelho: rota planejada, mas ainda nao carregada.
+- Verde: rota carregada na Base.
+- Laranja: rota carregada ha mais de 30 minutos.
+- Cinza: doca vazia.
+
+Se a rota ficar laranja, ela continua laranja mesmo se for expedida ou se a onda terminar.
+
+
+JUSTIFICATIVAS
+
+1. Clique na aba "Justificativas".
+2. Escolha um motivo em "Motivo em massa".
+3. Clique em "Selecionar rotas" para preencher somente as rotas pendentes sem justificativa.
+4. Clique em "Aplicar motivo".
+
+
+PDF
+
+Clique em "PDF" para escolher:
+
+- quais ondas imprimir;
+- intervalo de docas;
+- relatorio de Docas;
+- relatorio de Justificativas;
+- relatorio de Fechamento.
+
+Tambem pode usar Ctrl+P no navegador.
+
+
+ARQUIVOS PRINCIPAIS
+
+- ondas-pm-sameday.html: arquivo principal para abrir o painel.
+- ondas-pm-sameday-dados.js: dados iniciais e horarios do PM/Same Day.
+- assets: pasta com logos da DHL e Mercado Livre.
+- controle-docas-pm-sameday-whatsapp.zip: pacote pronto para enviar.
