@@ -1,4 +1,4 @@
-COMO USAR O CONTROLE DE DOCAS - PM / SAME DAY
+COMO USAR O CONTROLE DE DOCAS - PM / SAME DAY / SDE1
 
 1. Abra o index.html ou o link publicado no GitHub Pages.
 2. Para editar, entre com o acesso de Administrador no painel.
@@ -6,7 +6,7 @@ COMO USAR O CONTROLE DE DOCAS - PM / SAME DAY
 4. Atualize a Base Operacional e, quando necessário, a Base Aduana.
 5. Clique em "Aplicar".
 
-Este projeto e uma copia separada do Controle de Ondas AM. Ele trabalha somente com os ciclos PM e SD.
+Este projeto e uma copia separada do Controle de Ondas AM. Ele trabalha somente com os ciclos PM, SD e SDE1.
 
 
 CICLOS E HORARIOS
@@ -22,6 +22,11 @@ SD:
 - SD Onda 01: 17:10 ate 17:30 h
 - SD Onda 02: 17:30 ate 18:00 h
 - SD Onda 03: 18:00 ate 18:30 h
+
+SDE1:
+
+- SDE1 Onda 01: 18:00 ate 18:30 h
+- SDE1 Onda 02: 18:30 ate 19:00 h
 
 
 EXTRACAO
@@ -45,6 +50,9 @@ Exemplo SD:
 SD Onda 1    VN1_SD    52    UNICA TRANSPORTES
 SD Onda 2    VH2_SD    56    PANTERA LOG TRAN
 SD Onda 3    VL2_SD    60    PANTERA LOG TRAN
+
+Para SDE1, o painel aceita "SDE1 Onda 1", "SDE1 Onda 2", "SDE1 OLA 1" e "SDE1 OLA 2".
+Rotas com nomenclatura "_SDE1" tambem sao identificadas como SDE1.
 
 Tambem aceita tabela completa com mais colunas. O painel ignora o que nao precisa.
 
