@@ -1,6 +1,6 @@
-# Controle de Docas SSP15 - PM e SD
+# Controle de Docas SSP15 - PM, SD e SDE1
 
-Painel web para acompanhamento operacional das ondas PM e Same Day (SD), alinhado à estrutura do Painel_DocasAM1.
+Painel web para acompanhamento operacional das ondas PM, Same Day (SD) e SDE1, alinhado à estrutura do Painel_DocasAM1.
 
 ## Recursos
 
@@ -20,13 +20,15 @@ Painel web para acompanhamento operacional das ondas PM e Same Day (SD), alinhad
 - SD Onda 01: 17:10–17:30
 - SD Onda 02: 17:30–18:00
 - SD Onda 03: 18:00–18:30
+- SDE1 Onda 01: 18:00–18:30
+- SDE1 Onda 02: 18:30–19:00
 
 ## Arquivos principais
 
 - `index.html`: painel principal publicado pelo GitHub Pages.
-- `ondas-pm-sameday-dados.js`: ondas e horários oficiais do PM/SD.
+- `ondas-pm-sameday-dados.js`: ondas e horários oficiais do PM/SD/SDE1.
 - `firebase-config.js`: configuração de sincronização; usa o documento `docas-pm-sd`.
 - `html2canvas.min.js`: suporte à exportação de imagens.
 - `LEIA-ME-PM-SAMEDAY.txt`: orientação operacional.
 
-O armazenamento local usa a chave exclusiva do PM/SD e o Firebase utiliza um documento separado do AM1, evitando mistura de dados entre os painéis.
+O armazenamento local usa a chave exclusiva do PM/SD/SDE1 e o Firebase utiliza um documento separado do AM1, evitando mistura de dados entre os painéis.
