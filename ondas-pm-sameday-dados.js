@@ -1,5 +1,5 @@
 window.ONDAS_DADOS = {
-  titulo: "CONTROLE DE DOCAS - SSP15",
+  titulo: "CONTROLE DE DOCAS - SSP15 PM / SD",
   data: "17/06/2026",
   totalRotas: "",
   metaOot: "85",

@@ -1,9 +1,9 @@
 COMO USAR O CONTROLE DE DOCAS - PM / SAME DAY
 
-1. Abra o arquivo ondas-pm-sameday.html no navegador.
-2. Clique em "Editar dados", no canto superior direito.
+1. Abra o index.html ou o link publicado no GitHub Pages.
+2. Para editar, entre com o acesso de Administrador no painel.
 3. Cole os dados da Extracao no campo "Extracao".
-4. Cole as rotas carregadas ou expedidas no campo "Base".
+4. Atualize a Base Operacional e, quando necessário, a Base Aduana.
 5. Clique em "Aplicar".
 
 Este projeto e uma copia separada do Controle de Ondas AM. Ele trabalha somente com os ciclos PM e SD.
