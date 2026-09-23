@@ -15698,7 +15698,18 @@ body.editor-open .global-theme-toggle {
           throw new Error("Não foi possível conectar ao Firebase. Verifique a internet e tente novamente.");
         }
 
-        await cloudState.tools.signInWithEmailAndPassword(cloudState.auth, email, password);
+        const credential = await cloudState.tools.signInWithEmailAndPassword(cloudState.auth, email, password);
+        const authenticatedRole = await resolveUserRole(credential.user);
+        cloudState.user = credential.user;
+        cloudState.role = authenticatedRole;
+        updateAuthBadge();
+
+        if (authenticatedRole !== "admin") {
+          passwordInput.value = "";
+          message.textContent = "Login aceito, mas este usuário não tem permissão de Administrador.";
+          return;
+        }
+
         message.textContent = "";
         passwordInput.value = "";
         passwordInput.type = "password";
@@ -15817,8 +15828,18 @@ body.editor-open .global-theme-toggle {
 
     document.getElementById("editBtn").addEventListener("click", openDrawer);
     document.getElementById("refreshSyncBtn").addEventListener("click", refreshPanelFromCloud);
-    document.getElementById("authBtn").addEventListener("click", () => {
-      document.getElementById("loginModal").classList.add("open");
+    document.getElementById("authBtn").addEventListener("click", async () => {
+      const modal = document.getElementById("loginModal");
+      const message = document.getElementById("loginMessage");
+      modal.classList.add("open");
+      message.textContent = cloudState.ready ? "" : "Conectando ao Firebase...";
+      const ready = await initializeFirebase();
+      message.textContent = ready ? "" : "Não foi possível conectar ao Firebase. Verifique a internet e tente novamente.";
+      window.setTimeout(() => {
+        const emailInput = document.getElementById("loginEmail");
+        const passwordInput = document.getElementById("loginPassword");
+        (emailInput.value ? passwordInput : emailInput).focus();
+      }, 0);
     });
     document.getElementById("closeLoginBtn").addEventListener("click", () => {
       document.getElementById("loginPassword").type = "password";
