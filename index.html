@@ -1800,16 +1800,25 @@
     .login-modal {
       position: fixed;
       inset: 0;
-      z-index: 80;
+      z-index: 10000;
       display: none;
       place-items: center;
       background: rgba(2, 12, 22, .62);
       padding: 24px;
+      pointer-events: auto;
     }
 
     .login-modal.open { display: grid; }
 
+    .login-modal input,
+    .login-modal button,
+    .login-modal label {
+      pointer-events: auto !important;
+    }
+
     .login-card {
+      position: relative;
+      z-index: 1;
       width: min(430px, 100%);
       border-radius: 12px;
       overflow: hidden;
@@ -15599,72 +15608,121 @@ body.editor-open .global-theme-toggle {
       }, error => console.warn("Falha ao ouvir Firebase:", error));
     }
 
+    let firebaseInitPromise = null;
+
     async function initializeFirebase() {
-      cloudState.enabled = firebaseConfigured();
-      if (cloudState.enabled) cloudState.role = "leitor";
-      updateAuthBadge();
-      if (!cloudState.enabled) return;
-      try {
-        const [appModule, authModule, firestoreModule] = await Promise.all([
-          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
-          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
-          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
-        ]);
-        const app = appModule.initializeApp(window.FIREBASE_APP_CONFIG);
-        cloudState.auth = authModule.getAuth(app);
-        cloudState.db = firestoreModule.getFirestore(app);
-        cloudState.tools = {
-          signInWithEmailAndPassword: authModule.signInWithEmailAndPassword,
-          signOut: authModule.signOut,
-          onAuthStateChanged: authModule.onAuthStateChanged,
-          doc: firestoreModule.doc,
-          getDoc: firestoreModule.getDoc,
-          setDoc: firestoreModule.setDoc,
-          runTransaction: firestoreModule.runTransaction,
-          onSnapshot: firestoreModule.onSnapshot,
-          serverTimestamp: firestoreModule.serverTimestamp
-        };
-        const panel = window.FIREBASE_PANEL_DOC || {};
-        cloudState.docRef = cloudState.tools.doc(cloudState.db, panel.collection || "paineis", panel.document || "docas-pm-sd");
-        cloudState.ready = true;
-        cloudState.tools.onAuthStateChanged(cloudState.auth, async user => {
-          cloudState.user = user;
-          cloudState.role = user ? await resolveUserRole(user) : "leitor";
-          cloudState.authResolved = true;
-          cloudState.lastRemoteRevision = 0;
-          updateAuthBadge();
-          subscribePanel();
-          render();
-        });
-      } catch (error) {
-        cloudState.enabled = false;
-        cloudState.ready = false;
-        console.warn("Firebase não iniciou:", error);
+      if (cloudState.ready && cloudState.auth && typeof cloudState.tools.signInWithEmailAndPassword === "function") {
+        return true;
+      }
+      if (firebaseInitPromise) return firebaseInitPromise;
+
+      firebaseInitPromise = (async () => {
+        cloudState.enabled = firebaseConfigured();
+        if (cloudState.enabled) cloudState.role = "leitor";
         updateAuthBadge();
+        if (!cloudState.enabled) return false;
+
+        try {
+          const [appModule, authModule, firestoreModule] = await Promise.all([
+            import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
+            import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
+            import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
+          ]);
+          const app = appModule.getApps().length
+            ? appModule.getApp()
+            : appModule.initializeApp(window.FIREBASE_APP_CONFIG);
+          cloudState.auth = authModule.getAuth(app);
+          cloudState.db = firestoreModule.getFirestore(app);
+          cloudState.tools = {
+            signInWithEmailAndPassword: authModule.signInWithEmailAndPassword,
+            signOut: authModule.signOut,
+            onAuthStateChanged: authModule.onAuthStateChanged,
+            doc: firestoreModule.doc,
+            getDoc: firestoreModule.getDoc,
+            setDoc: firestoreModule.setDoc,
+            runTransaction: firestoreModule.runTransaction,
+            onSnapshot: firestoreModule.onSnapshot,
+            serverTimestamp: firestoreModule.serverTimestamp
+          };
+          const panel = window.FIREBASE_PANEL_DOC || {};
+          cloudState.docRef = cloudState.tools.doc(cloudState.db, panel.collection || "paineis", panel.document || "docas-pm-sd");
+          cloudState.ready = true;
+          cloudState.enabled = true;
+          cloudState.tools.onAuthStateChanged(cloudState.auth, async user => {
+            cloudState.user = user;
+            cloudState.role = user ? await resolveUserRole(user) : "leitor";
+            cloudState.authResolved = true;
+            cloudState.lastRemoteRevision = 0;
+            updateAuthBadge();
+            subscribePanel();
+            render();
+          });
+          return true;
+        } catch (error) {
+          cloudState.enabled = false;
+          cloudState.ready = false;
+          console.warn("Firebase não iniciou:", error);
+          updateAuthBadge();
+          return false;
+        }
+      })();
+
+      try {
+        return await firebaseInitPromise;
+      } finally {
+        firebaseInitPromise = null;
       }
     }
 
     async function loginFirebase() {
-      if (!cloudState.enabled) {
-        document.getElementById("loginMessage").textContent = "Firebase ainda não está ligado no firebase-config.js.";
-        return;
-      }
-      const email = normalize(document.getElementById("loginEmail").value);
-      const password = document.getElementById("loginPassword").value;
+      const message = document.getElementById("loginMessage");
+      const button = document.getElementById("loginBtn");
+      const emailInput = document.getElementById("loginEmail");
+      const passwordInput = document.getElementById("loginPassword");
+      const email = normalize(emailInput.value);
+      const password = passwordInput.value;
+
       if (!email || !password) {
-        document.getElementById("loginMessage").textContent = "Preencha e-mail e senha.";
+        message.textContent = "Preencha e-mail e senha.";
         return;
       }
+
+      button.disabled = true;
+      const originalButtonText = button.textContent;
+      button.textContent = "Conectando...";
+      message.textContent = "Conectando ao Firebase...";
+
       try {
+        const ready = await initializeFirebase();
+        if (!ready || !cloudState.auth || typeof cloudState.tools.signInWithEmailAndPassword !== "function") {
+          throw new Error("Não foi possível conectar ao Firebase. Verifique a internet e tente novamente.");
+        }
+
         await cloudState.tools.signInWithEmailAndPassword(cloudState.auth, email, password);
-        document.getElementById("loginMessage").textContent = "";
-        document.getElementById("loginPassword").type = "password";
+        message.textContent = "";
+        passwordInput.value = "";
+        passwordInput.type = "password";
         document.getElementById("showLoginPassword").checked = false;
         document.getElementById("loginModal").classList.remove("open");
       } catch (error) {
         console.error("Firebase login error:", error);
-        document.getElementById("loginMessage").textContent =
-          `${error?.code || "erro"} - ${error?.message || "Falha no login"}`;
+        const code = String(error?.code || "");
+        const friendly = {
+          "auth/invalid-credential": "E-mail ou senha inválidos.",
+          "auth/invalid-login-credentials": "E-mail ou senha inválidos.",
+          "auth/user-not-found": "E-mail ou senha inválidos.",
+          "auth/wrong-password": "E-mail ou senha inválidos.",
+          "auth/invalid-email": "Digite um e-mail válido.",
+          "auth/too-many-requests": "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+          "auth/network-request-failed": "Falha de conexão com o Firebase. Verifique a internet e tente novamente.",
+          "auth/unauthorized-domain": "Este endereço ainda não está autorizado no Firebase."
+        }[code];
+        message.textContent = friendly || error?.message || "Falha no login.";
+        passwordInput.focus();
+        passwordInput.select();
+      } finally {
+        button.disabled = false;
+        button.textContent = originalButtonText || "Entrar";
       }
     }
 
@@ -15768,6 +15826,14 @@ body.editor-open .global-theme-toggle {
       document.getElementById("loginModal").classList.remove("open");
     });
     document.getElementById("loginBtn").addEventListener("click", loginFirebase);
+    ["loginEmail", "loginPassword"].forEach(id => {
+      document.getElementById(id).addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          loginFirebase();
+        }
+      });
+    });
     document.getElementById("logoutBtn").addEventListener("click", logoutFirebase);
     document.getElementById("showLoginPassword").addEventListener("change", event => {
       const passwordInput = document.getElementById("loginPassword");
