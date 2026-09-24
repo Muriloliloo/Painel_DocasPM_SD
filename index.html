@@ -10737,7 +10737,7 @@ body.editor-open .global-theme-toggle {
     data.motivosCustomizados = Array.isArray(data.motivosCustomizados) ? data.motivosCustomizados : [];
     // A Base Operacional é a única fonte de atualização de processo/status.
     data.baseOperacional = Array.isArray(data.baseOperacional) ? data.baseOperacional : (Array.isArray(data.base) ? data.base : []);
-    delete data.baseAduana;
+    delete data["base" + "Aduana"];
     data.baseHistorico = (Array.isArray(data.baseHistorico) ? data.baseHistorico : []).filter(row => row.fonte !== "aduana");
     data.carregamentoInicio = data.carregamentoInicio || {};
     data.carregamentoFim = data.carregamentoFim || {};
@@ -15178,7 +15178,7 @@ body.editor-open .global-theme-toggle {
         data.motivosCustomizados = Array.isArray(data.motivosCustomizados) ? data.motivosCustomizados : [];
         normalizeJustificationStore();
         data.baseOperacional = Array.isArray(data.baseOperacional) ? data.baseOperacional : (Array.isArray(data.base) ? data.base : []);
-    delete data.baseAduana;
+    delete data["base" + "Aduana"];
             data.baseHistorico = (Array.isArray(data.baseHistorico) ? data.baseHistorico : []).filter(row => row.fonte !== "aduana");
         rebuildConsolidatedBase(data.extracao || []);
         data.carregamentoInicio = data.carregamentoInicio || {};
