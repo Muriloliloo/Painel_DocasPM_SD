@@ -3,7 +3,7 @@ COMO USAR O CONTROLE DE DOCAS - PM / SAME DAY / SDE1
 1. Abra o index.html ou o link publicado no GitHub Pages.
 2. Para editar, entre com o acesso de Administrador no painel.
 3. Cole os dados da Extracao no campo "Extracao".
-4. Atualize a Base Operacional e, quando necessário, a Base Aduana.
+4. Atualize somente a Base Operacional.
 5. Clique em "Aplicar".
 
 Este projeto e uma copia separada do Controle de Ondas AM. Ele trabalha somente com os ciclos PM, SD e SDE1.
@@ -59,7 +59,7 @@ Tambem aceita tabela completa com mais colunas. O painel ignora o que nao precis
 
 BASE
 
-A Base serve para informar quais rotas ja subiram o QR ou foram expedidas.
+A Base Operacional serve para informar quais rotas ja subiram o QR, estao em processo ou foram expedidas.
 
 Pode colar so a rota:
 
@@ -69,18 +69,20 @@ VA11_AM1
 
 Ou pode colar a linha vinda do sistema com informacoes extras:
 
-VP11_AM1    Aduana em andamento    3 minutos    21 minutos    1
+VP11_AM1    Guardando    3 minutos    21 minutos    1
 VA11_AM1    Expedida    -    4 minutos    3
 
 O painel considera apenas:
 
 - Rota
-- Doca ou vaga
-- Onda
-- Transportadora
-- Expedida
+- Processo ou status
+- Tempo do processo
+- Tempo total
+- Doca operacional
 
 Todo o restante e ignorado.
+
+A Base Aduana foi removida. Todo processo, status, tempo e doca operacional devem vir pela Base Operacional.
 
 Se a mesma rota aparecer duplicada na Base, o cronometro nao reinicia.
 

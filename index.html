@@ -10632,13 +10632,6 @@ body.editor-open .global-theme-toggle {
         </div>
         <textarea id="basePaste" spellcheck="false"></textarea>
       </div>
-      <div class="paste-box base">
-        <div class="paste-box-header">
-          <label for="aduanaPaste">Base aduana (colar do Excel)</label>
-          <button class="paste-clear-button admin-only" type="button" data-clear-target="aduanaPaste" aria-label="Limpar somente a Base aduana">Limpar</button>
-        </div>
-        <textarea id="aduanaPaste" spellcheck="false"></textarea>
-      </div>
     </section>
     <div class="paste-clear-status" id="pasteClearStatus" role="status" aria-live="polite"></div>
     <div class="drawer-actions">
@@ -10742,10 +10735,10 @@ body.editor-open .global-theme-toggle {
     data.horarios = { ...(data.horarios || {}), ...(originalData.horarios || {}), ...horariosOficiais };
     data.justificativas = data.justificativas || {};
     data.motivosCustomizados = Array.isArray(data.motivosCustomizados) ? data.motivosCustomizados : [];
-    // Bloco 2: bases separadas, mantendo data.base como visão consolidada compatível.
+    // A Base Operacional é a única fonte de atualização de processo/status.
     data.baseOperacional = Array.isArray(data.baseOperacional) ? data.baseOperacional : (Array.isArray(data.base) ? data.base : []);
-    data.baseAduana = Array.isArray(data.baseAduana) ? data.baseAduana : [];
-    data.baseHistorico = Array.isArray(data.baseHistorico) ? data.baseHistorico : [];
+    delete data.baseAduana;
+    data.baseHistorico = (Array.isArray(data.baseHistorico) ? data.baseHistorico : []).filter(row => row.fonte !== "aduana");
     data.carregamentoInicio = data.carregamentoInicio || {};
     data.carregamentoFim = data.carregamentoFim || {};
     data.modoTesteCronometro = Boolean(data.modoTesteCronometro);
@@ -10805,27 +10798,11 @@ body.editor-open .global-theme-toggle {
       "status base": "status",
       "situação base": "status",
       "situacao base": "status",
-      estado: "estadoAduana",
-      "estado da aduana": "estadoAduana",
-      "estado aduana": "estadoAduana",
-      "estado da auditoria": "estadoAduana",
-      "estado auditoria": "estadoAduana",
       processo: "processo",
       "tempo do processo": "tempoProcesso",
       "tempo de processo": "tempoProcesso",
       "tempo processo": "tempoProcesso",
       "tempo total": "tempoTotal",
-      "rep de aduana": "repLog",
-      "rep da aduana": "repLog",
-      "representante de aduana": "repLog",
-      "representante da aduana": "repLog",
-      "tempo de auditoria": "auditTime",
-      "tempo auditoria": "auditTime",
-      auditoria: "auditTime",
-      unidades: "aduanaUnidades",
-      "unidades bipadas": "aduanaBipadas",
-      "unidades corretas": "aduanaBipadas",
-      corretas: "aduanaBipadas",
       spr: "spr",
       pacote: "pacotes",
       pacotes: "pacotes",
@@ -11179,9 +11156,8 @@ body.editor-open .global-theme-toggle {
         const recognized = mappedHeader.filter(Boolean);
         if (recognized.length < 2 || !recognized.includes("rota")) continue;
 
-        // Textos copiados da Aduana trazem indicadores antes da tabela, como
-        // "CORRETAS | A MAIS | FALTANTES | AVARIADOS | ROTA". Escolher o
-        // primeiro cabeçalho reconhecido desloca todas as colunas da tabela real.
+        // Alguns relatórios trazem indicadores antes da tabela real. Escolher o
+        // primeiro cabeçalho reconhecido pode deslocar todas as colunas.
         const routeFirstBonus = mappedHeader.findIndex(key => key === "rota") === 0 ? 1 : 0;
         const score = new Set(recognized).size * 10 + routeFirstBonus;
         if (!bestHeader || score > bestHeader.score) {
@@ -11252,18 +11228,6 @@ body.editor-open .global-theme-toggle {
       };
     }
 
-    function correctUnits(value) {
-      const text = normalize(value);
-      const correct = text.match(/(\d+)\s+corretas?/i);
-      if (correct) return correct[1];
-      const number = text.match(/^\d+$/)?.[0];
-      return number || "";
-    }
-
-    function normalizeAuditTime(value) {
-      return normalize(value).replace(/\s+/g, " ");
-    }
-
     function enrichBaseItem(item = {}) {
       const driver = extractDriverDetails(item.motorista || "");
       const carrier = extractCarrierDetails(item.transportadora || "");
@@ -11272,43 +11236,18 @@ body.editor-open .global-theme-toggle {
       item.motorista = firstNonEmptyLine(driver.motorista || item.motorista || "");
       item.transportadora = carrier.transportadora || driver.transportadora || "";
       item.placa = normalize(item.placa) || carrier.placa || driver.placa || "";
-      item.auditTime = normalizeAuditTime(item.auditTime || item.tempoAuditoria || "");
-      item.aduanaUnidades = normalize(item.aduanaUnidades || "");
-      item.aduanaBipadas = correctUnits(item.aduanaBipadas || item.aduanaUnidades || "");
       item.processo = normalize(item.processo || "");
       item.tempoProcesso = normalize(item.tempoProcesso || "");
       item.tempoTotal = normalize(item.tempoTotal || "");
-      item.estadoAduana = normalize(item.estadoAduana || "");
       item.status = normalize(item.status || "");
       item.doca = validDockValue(item.doca);
       return item;
     }
 
-    function baseItemForSource(item = {}, source = "operacional") {
+    function baseItemForSource(item = {}) {
       const route = routeToken(item.rota) || normalize(item.rota);
-      if (source === "aduana") {
-        return {
-          rota: route,
-          processo: normalize(item.processo || item.status),
-          tempoProcesso: normalize(item.tempoProcesso),
-          tempoTotal: normalize(item.tempoTotal),
-          doca: validDockValue(item.doca),
-          motorista: normalize(item.motorista),
-          transportadora: normalize(item.transportadora),
-          placa: normalize(item.placa),
-          repLog: normalize(item.repLog),
-          auditTime: normalize(item.auditTime),
-          aduanaUnidades: normalize(item.aduanaUnidades),
-          aduanaBipadas: correctUnits(item.aduanaBipadas || item.aduanaUnidades || ""),
-          estadoAduana: normalize(item.estadoAduana)
-        };
-      }
-
       const rawProcess = normalize(item.processo || item.status);
       const normalizedStatus = normalizeBaseStatus(rawProcess);
-      // Em atualizações cumulativas, campo vazio, "-" ou texto desconhecido significa
-      // ausência de atualização. Somente "Pendente" escrito explicitamente pode
-      // substituir um estado anterior da rota.
       const status = normalizedStatus === "Pendente" && plainText(rawProcess) !== "pendente"
         ? ""
         : normalizedStatus;
@@ -11320,11 +11259,6 @@ body.editor-open .global-theme-toggle {
         doca: validDockValue(item.doca),
         status
       };
-    }
-
-    function isAduanaState(value) {
-      const status = normalizeBaseStatus(value);
-      return status === "Em aduana" || status === "Pendente" || /^(concluida|cancelada)$/.test(plainText(value));
     }
     function lastStandaloneDock(row = []) {
       const docks = row
@@ -11458,100 +11392,6 @@ body.editor-open .global-theme-toggle {
         .filter(Boolean);
     }
 
-    function looksLikeVehiclePlate(value) {
-      const text = normalize(value).toUpperCase();
-      return /^(?=.{5,12}$)(?=.*[A-Z])(?=.*\d)[A-Z0-9]{3}(?:-[A-Z0-9]{4,8}|[A-Z0-9]{4,9})$/.test(text);
-    }
-
-    function isAduanaSemanticNoise(value) {
-      const text = normalize(value);
-      const plain = plainText(text);
-      if (!text || routeToken(text) || /^#?\d{6,}$/.test(text)) return true;
-      if (looksLikeVehiclePlate(text) || text.includes("|")) return true;
-      if (/^\d+(?:[.,]\d+)?\s*(?:min(?:uto)?s?\.?|%)$/i.test(text)) return true;
-      if (/^\d+\s+(?:corretas?|faltantes?|avariad[ao]s?|a\s+mais)\b/i.test(text)) return true;
-      if (/^\d{1,2}:\d{2}(?::\d{2})?(?:\s*\|\s*\d{1,2}\/[a-zç.]+\.?)?$/i.test(text)) return true;
-      if (/^\d{1,2}\/[a-zç.]+\.?$/i.test(text) || isAduanaState(text)) return true;
-      return /^(rota e veiculo|motorista|rep de aduana|tempo de auditoria|unidades|estado|historico de aduana|configurar aduana)$/i.test(plain);
-    }
-
-    function previousSemanticIndex(lines, fromIndex, floorIndex = 0) {
-      for (let index = fromIndex - 1; index >= floorIndex; index -= 1) {
-        if (!isAduanaSemanticNoise(lines[index])) return index;
-      }
-      return -1;
-    }
-
-    function parseLooseAduanaText(text) {
-      const source = normalizeSmartPasteSource(text);
-      const anchors = Array.from(source.matchAll(/\b([A-Z]{1,5}\d{0,3}_[A-Z0-9]+)\b[\s'"“”\\]*#\d+/gi));
-      if (!anchors.length) return [];
-
-      return anchors.map((anchor, index) => {
-        const route = anchor[1].toUpperCase();
-        const blockEnd = anchors[index + 1]?.index ?? source.length;
-        const lines = semanticPasteLines(source.slice(anchor.index, blockEnd));
-        const routeLineIndex = Math.max(0, lines.findIndex(line => routeToken(line) === route));
-
-        let carrierLineIndex = lines.findIndex((line, lineIndex) => {
-          if (lineIndex <= routeLineIndex || !line.includes("|")) return false;
-          const parts = line.split("|").map(normalize);
-          return looksLikeVehiclePlate(parts.at(-1)) && !parts.at(-1).includes("/");
-        });
-        let plateLineIndex = -1;
-        let transportadora = "";
-        let placa = "";
-
-        if (carrierLineIndex >= 0) {
-          const carrier = extractCarrierDetails(lines[carrierLineIndex]);
-          transportadora = carrier.transportadora;
-          placa = carrier.placa;
-        } else {
-          plateLineIndex = lines.findIndex((line, lineIndex) => lineIndex > routeLineIndex && looksLikeVehiclePlate(line));
-          if (plateLineIndex >= 0) {
-            placa = lines[plateLineIndex];
-            carrierLineIndex = previousSemanticIndex(lines, plateLineIndex, routeLineIndex + 1);
-            transportadora = carrierLineIndex >= 0 ? lines[carrierLineIndex] : "";
-          }
-        }
-
-        const driverIndex = carrierLineIndex >= 0
-          ? previousSemanticIndex(lines, carrierLineIndex, routeLineIndex + 1)
-          : -1;
-        const motorista = driverIndex >= 0 ? lines[driverIndex] : "";
-        const repSearchStart = Math.max(carrierLineIndex, plateLineIndex, driverIndex, routeLineIndex) + 1;
-        const repDateIndex = lines.findIndex((line, lineIndex) => {
-          if (lineIndex < repSearchStart) return false;
-          return /^\d{1,2}:\d{2}(?::\d{2})?(?:\s*\|\s*\d{1,2}\/[a-zç.]+\.?)?$/i.test(line)
-            || /^\d{1,2}\/[a-zç.]+\.?$/i.test(line);
-        });
-        const repIndex = repDateIndex >= 0
-          ? previousSemanticIndex(lines, repDateIndex, repSearchStart)
-          : -1;
-        const repLog = repIndex >= 0 ? lines[repIndex] : "";
-        const auditSearchStart = repDateIndex >= 0 ? repDateIndex + 1 : repSearchStart;
-        const auditTime = lines.slice(auditSearchStart)
-          .find(line => /^\d+(?:[.,]\d+)?\s*(?:min(?:uto)?s?\.?)$/i.test(line)) || "";
-        const unitLines = lines.filter(line => /\b(?:corretas?|a\s+mais|faltantes?|avariad[ao]s?)\b/i.test(line));
-        const aduanaUnidades = unitLines.join(" | ");
-        const estadoAduana = lines.slice(auditSearchStart).find(isAduanaState) || "";
-
-        const item = {
-          rota: route,
-          motorista,
-          transportadora,
-          placa,
-          repLog,
-          auditTime,
-          aduanaUnidades,
-          aduanaBipadas: correctUnits(aduanaUnidades),
-          estadoAduana
-        };
-        enrichBaseItem(item);
-        return baseItemForSource(item, "aduana");
-      }).filter(item => looksLikeRoute(item.rota));
-    }
-
     function looseOperationalProcess(lines = []) {
       return lines.find(line => /^(?:aduana em andamento|em andamento|em aduana|guardando(?: pacotes?)?|carregando(?: pacotes?)?|guardando\s*\/\s*carregando|expedir|expedid[ao]|esperando (?:a )?aduana|contagem de pacotes?|em contagem|pendente|-)$/i.test(normalize(line))) || "";
     }
@@ -11585,7 +11425,7 @@ body.editor-open .global-theme-toggle {
       }).filter(item => looksLikeRoute(item.rota));
     }
 
-    function parseBasePaste(text, source = "operacional") {
+    function parseBasePaste(text) {
       const rows = splitRows(text);
       if (!rows.length) return [];
       const { mappedHeader, headerIndex } = headerInfo(rows);
@@ -11595,76 +11435,34 @@ body.editor-open .global-theme-toggle {
         const line = row.join("\t");
         const route = routeToken(line);
         const routeIndex = route ? row.findIndex(cell => routeToken(cell) === route) : row.findIndex(looksLikeRoute);
-
         if (mappedHeader) {
           row.forEach((cell, index) => {
             const key = mappedHeader[index];
             if (key) item[key] = normalize(cell);
           });
           item.rota = routeToken(item.rota) || item.rota || route;
-          if (source === "operacional") {
-            item.processo = item.processo || item.status || "";
-            item.doca = validDockValue(item.doca) || lastStandaloneDock(row);
-          }
+          item.processo = item.processo || item.status || "";
+          item.doca = validDockValue(item.doca) || lastStandaloneDock(row);
         } else {
           item.rota = route || (routeIndex >= 0 ? row[routeIndex] : row[0]);
           const values = row.slice(Math.max(0, routeIndex) + 1).map(normalize);
-          if (source === "aduana") {
-            // Aceita tanto o formato exportado pelo painel quanto a ordem natural da Base Aduana.
-            if (isAduanaState(values[0])) {
-              item.estadoAduana = values[0] || "";
-              item.auditTime = values[1] || "";
-              item.aduanaBipadas = values[2] || "";
-              item.repLog = values[4] || "";
-              item.transportadora = values[5] || "";
-              item.placa = values[6] || "";
-            } else {
-              item.motorista = values[0] || "";
-              item.repLog = values[1] || "";
-              item.auditTime = values[2] || "";
-              item.aduanaUnidades = values[3] || "";
-              item.estadoAduana = values[4] || "";
-            }
-          } else {
-            // Formato operacional sem cabeçalho: rota, processo, tempo processo, tempo total, doca.
-            item.processo = values[0] || "";
-            item.tempoProcesso = values[1] || "";
-            item.tempoTotal = values[2] || "";
-            item.doca = values[3] || lastStandaloneDock(row);
-          }
+          item.processo = values[0] || "";
+          item.tempoProcesso = values[1] || "";
+          item.tempoTotal = values[2] || "";
+          item.doca = values[3] || lastStandaloneDock(row);
         }
         enrichBaseItem(item);
-        return baseItemForSource(item, source);
+        return baseItemForSource(item);
       }).filter(item => looksLikeRoute(item.rota));
-      const semanticRows = source === "aduana"
-        ? parseLooseAduanaText(text)
-        : parseLooseOperationalText(text);
-      return uniqueBaseRows([...parsed, ...semanticRows]);
+      return uniqueBaseRows([...parsed, ...parseLooseOperationalText(text)]);
     }
     function toPaste(rows) {
       const header = ["Onda", "ID da Rota", "Rota otimizada", "Rota original", "Doca", "Rep/Log", "Motorista", "Transportadora", "Placa", "Tipo de veículo", "Tipo de rota", "Tipo de área", "SPR", "Pacotes", "Cluster"];
       return [header.join("\t"), ...rows.map(row => columns.map(key => row[key] || "").join("\t"))].join("\n");
     }
 
-    function toBasePaste(rows, source = "operacional") {
+    function toBasePaste(rows) {
       const uniqueRows = uniqueBaseRows(rows);
-      if (source === "aduana") {
-        const header = ["Rota", "Processo", "Tempo do processo", "Tempo total", "Doca", "Motorista", "Rep de aduana", "Tempo de auditoria", "Unidades corretas", "Estado da aduana", "Transportadora", "Placa"];
-        return [header.join("\t"), ...uniqueRows.map(row => [
-          row.rota || "",
-          row.processo || "",
-          row.tempoProcesso || "",
-          row.tempoTotal || "",
-          row.doca || "",
-          row.motorista || "",
-          row.repLog || "",
-          row.auditTime || "",
-          row.aduanaBipadas || "",
-          row.estadoAduana || "",
-          row.transportadora || "",
-          row.placa || ""
-        ].join("\t"))].join("\n");
-      }
       const header = ["Rota", "Processo", "Tempo do processo", "Tempo total", "Doca operacional"];
       return [header.join("\t"), ...uniqueRows.map(row => [
         row.rota || "",
@@ -11724,25 +11522,13 @@ body.editor-open .global-theme-toggle {
       return uniqueBaseRows(rows).filter(row => planned.has(routeKey(row.rota)));
     }
 
-    function isAduanaDetailRow(row = {}) {
-      return Boolean(normalize(row.repLog) || normalize(row.motorista) || normalize(row.transportadora)
-        || normalize(row.placa) || normalize(row.auditTime) || normalize(row.aduanaUnidades)
-        || normalize(row.aduanaBipadas) || normalize(row.estadoAduana) || normalize(row.processo)
-        || normalize(row.tempoProcesso) || normalize(row.tempoTotal));
-    }
 
     function rebuildConsolidatedBase(extractionRows = data.extracao || []) {
       const operationalRows = (data.baseOperacional || []).map(row =>
-        baseItemForSource(enrichBaseItem({ ...row }), "operacional")
-      );
-      const customsRows = (data.baseAduana || []).map(row =>
-        baseItemForSource(enrichBaseItem({ ...row }), "aduana")
+        baseItemForSource(enrichBaseItem({ ...row }))
       );
       data.baseOperacional = onlyPlannedBaseRows(operationalRows, extractionRows);
-      data.baseAduana = onlyPlannedBaseRows(customsRows, extractionRows);
-      // As duas fontes se complementam; em campos operacionais coincidentes, a Base Operacional vence.
-      data.base = mergeLatestBaseRows(data.baseAduana, data.baseOperacional);
-      data.base = onlyPlannedBaseRows(data.base, extractionRows);
+      data.base = data.baseOperacional.map(row => ({ ...row }));
       return data.base;
     }
 
@@ -11773,9 +11559,8 @@ body.editor-open .global-theme-toggle {
       return numericOnly ? Math.round(Number(numericOnly[1]) * 60000) : 0;
     }
 
-    function historyRowDurationMs(row = {}, source = row.fonte || "") {
-      if (source === "aduana") return durationTextToMs(row.tempoProcesso || row.auditTime || row.tempoAuditoria || "");
-      return durationTextToMs(row.tempoProcesso || row.auditTime || "");
+    function historyRowDurationMs(row = {}) {
+      return durationTextToMs(row.tempoProcesso || "");
     }
 
     function calculatedDispatchEndMs(stampMs, durationMs, previousUpdateMs = 0) {
@@ -11788,7 +11573,7 @@ body.editor-open .global-theme-toggle {
     function appendBaseHistory(source, rows = []) {
       const stampMs = Date.now();
       const stamp = new Date(stampMs).toISOString();
-      data.baseHistorico = Array.isArray(data.baseHistorico) ? data.baseHistorico : [];
+      data.baseHistorico = (Array.isArray(data.baseHistorico) ? data.baseHistorico : []).filter(row => row.fonte !== "aduana");
       rows.forEach(row => {
         const durationMs = historyRowDurationMs(row, source);
         const calculatedEventMs = durationMs > 0 ? Math.max(0, stampMs - durationMs) : 0;
@@ -12481,15 +12266,6 @@ body.editor-open .global-theme-toggle {
         const key = routeKey(row.rota);
         if (key) map.set(key, operationalStatus(row.processo || row.status));
       });
-      uniqueBaseRows(data.baseAduana || []).forEach(row => {
-        const key = routeKey(row.rota);
-        if (!key) return;
-        const customsStatus = normalizeBaseStatus(row.estadoAduana)
-          || normalizeBaseStatus(row.processo)
-          || normalizeBaseStatus(row.status);
-        // Enquanto a auditoria estiver ativa, a Aduana é o estado mais atual da rota.
-        if (customsStatus === "Em aduana") map.set(key, customsStatus);
-      });
       return map;
     }
 
@@ -12582,11 +12358,7 @@ body.editor-open .global-theme-toggle {
 
     function dockPackageLabel(row = {}) {
       const spr = numericLabel(row.spr || row.pacotes || row.qtdPacotes || row.quantidadePacotes || row.quantidade || row.volumes);
-      const corretas = numericLabel(row.aduanaBipadas);
-      if (spr !== null && corretas !== null) return `${spr}/${corretas}`;
-      if (spr !== null) return `${spr}/-`;
-      if (corretas !== null) return `-/${corretas}`;
-      return "";
+      return spr !== null ? String(spr) : "";
     }
 
     function compactElapsedLabel(key, wave) {
@@ -12607,7 +12379,7 @@ body.editor-open .global-theme-toggle {
       const personName = routePersonName(primary || {});
       const routeText = displayRows.map(row => row.rota).filter(Boolean).join(" / ");
       const personHtml = personName ? `<span class="dock-person">${escapeHtml(personName)}</span>` : "";
-      const footerTimer = normalize(primary?.auditTime || "");
+      const footerTimer = normalize(primary?.tempoProcesso || "");
       const packages = primary ? dockPackageLabel(primary) : "";
       const slot = document.createElement("div");
       slot.className = `slot doca-card ${dockStatusClass(state)} ${rows.length > 1 ? "duplicate" : ""} ${data.ocultarCronometros ? "timer-hidden" : ""}`;
@@ -12617,7 +12389,7 @@ body.editor-open .global-theme-toggle {
         slot.setAttribute("role", "button");
         slot.setAttribute("aria-label", `Abrir histórico da rota ${primary.rota}`);
       }
-      slot.title = rows.length ? displayRows.map(row => `${row.rota} | Doca ${row.doca} | ${routePersonName(row) || "Sem rep/log"} | ${row.auditTime || "Sem tempo de auditoria"} | ${row.aduanaBipadas ? `${row.aduanaBipadas} corretas` : "Sem unidades corretas"} | ${dockPackageLabel(row) || "Sem pacotes"}`).join("\n") : `Doca ${dock} livre`;
+      slot.title = rows.length ? displayRows.map(row => `${row.rota} | Doca ${row.doca} | ${routePersonName(row) || "Sem rep/log"} | ${row.tempoProcesso || "Sem tempo de processo"} | ${dockPackageLabel(row) || "Sem pacotes"}`).join("\n") : `Doca ${dock} livre`;
       if (!primary) {
         slot.innerHTML = `
           <div class="dock-number">${dock}</div>
@@ -12827,7 +12599,7 @@ body.editor-open .global-theme-toggle {
     }
 
     function routeModeProcessSeconds(route, wave, details = {}, milestones = {}) {
-      const informed = durationTextToMs(details.tempoTotal || details.tempoProcesso || details.auditTime || "");
+      const informed = durationTextToMs(details.tempoTotal || details.tempoProcesso || "");
       if (informed > 0) return Math.floor(informed / 1000);
       const key = routeKey(route);
       const tracked = elapsedSeconds(key, wave);
@@ -13150,7 +12922,7 @@ body.editor-open .global-theme-toggle {
       let cycleStartIndex = 0;
       let completedSinceStart = false;
       rows.forEach((row, index) => {
-        const phase = normalizeBaseStatus(row.processo || row.status || row.estadoAduana);
+        const phase = normalizeBaseStatus(row.processo || row.status);
         if (phase === "Expedida") {
           completedSinceStart = true;
           return;
@@ -13176,19 +12948,13 @@ body.editor-open .global-theme-toggle {
       const key = routeKey(route);
       const extraction = (data.extracao || []).find(row => routeKey(row.rota) === key) || {};
       const operational = uniqueBaseRows(data.baseOperacional || []).find(row => routeKey(row.rota) === key) || {};
-      const customs = uniqueBaseRows(data.baseAduana || []).find(row => routeKey(row.rota) === key) || {};
       const consolidated = uniqueBaseRows(data.base || []).find(row => routeKey(row.rota) === key) || {};
       return {
         ...extraction,
         ...consolidated,
         ...operational,
-        // A Extração continua sendo a fonte principal. Quando ela não traz os
-        // nomes, usa os dados cadastrados na Aduana para não exibir "Não informado".
-        repLog: extraction.repLog || customs.repLog || consolidated.repLog || "",
-        motorista: extraction.motorista || customs.motorista || consolidated.motorista || "",
-        auditTime: customs.auditTime || consolidated.auditTime || "",
-        aduanaBipadas: customs.aduanaBipadas || consolidated.aduanaBipadas || "",
-        estadoAduana: customs.estadoAduana || "",
+        repLog: extraction.repLog || consolidated.repLog || "",
+        motorista: extraction.motorista || consolidated.motorista || "",
         transportadora: extraction.transportadora || "",
         placa: extraction.placa || "",
         tipoVeiculo: extraction.tipoVeiculo || "",
@@ -13241,64 +13007,22 @@ body.editor-open .global-theme-toggle {
     function processAlertForRoute(route) {
       const key = routeKey(route);
       const operational = uniqueBaseRows(data.baseOperacional || []).find(row => routeKey(row.rota) === key) || {};
-      const customs = uniqueBaseRows(data.baseAduana || []).find(row => routeKey(row.rota) === key) || {};
       const operationalStatusText = normalize(operational.processo || operational.status);
-      const customsStatusText = normalize(customs.processo || customs.estadoAduana || customs.status);
-
-      // Uma rota expedida já encerrou o processo e não deve permanecer em alerta.
       if (isExpedida(operationalStatusText)) return null;
-
-      const candidates = [];
-      const operationalDuration = durationTextToMs(operational.tempoProcesso || operational.auditTime || operational.tempoTotal);
-      if (operationalStatusText && operationalDuration > 0) {
-        candidates.push({
-          source: "operacional",
-          sourceLabel: "Base operacional",
-          statusText: operationalStatusText,
-          durationMs: operationalDuration
-        });
-      }
-
-      const customsClosed = /conclu|cancelad|finaliz|encerr/i.test(plainText(customsStatusText));
-      const customsDuration = durationTextToMs(customs.tempoProcesso || customs.auditTime || customs.tempoTotal);
-      if (customsStatusText && !customsClosed && customsDuration > 0) {
-        candidates.push({
-          source: "aduana",
-          sourceLabel: "Base aduana",
-          statusText: customsStatusText,
-          durationMs: customsDuration
-        });
-      }
-
-      const activeProcess = candidates.sort((a, b) => b.durationMs - a.durationMs)[0];
-      if (!activeProcess || activeProcess.durationMs <= processAlertThresholdMs) return null;
-
+      const operationalDuration = durationTextToMs(operational.tempoProcesso || operational.tempoTotal);
+      if (!operationalStatusText || operationalDuration <= processAlertThresholdMs) return null;
       const details = routeCurrentDetails(route);
-      const history = latestAlertHistory(route, activeProcess.source);
+      const history = latestAlertHistory(route, "operacional");
       const generatedAt = new Date(history?.atualizadoEm || Date.now()).getTime();
-      const startedAt = Math.max(0, generatedAt - activeProcess.durationMs);
-      const normalizedStatus = normalizeBaseStatus(activeProcess.statusText) || activeProcess.statusText || "Em processo";
-      const severity = activeProcess.durationMs >= processAlertCriticalMs ? "critical" : "moderate";
+      const startedAt = Math.max(0, generatedAt - operationalDuration);
+      const normalizedStatus = normalizeBaseStatus(operationalStatusText) || operationalStatusText || "Em processo";
+      const severity = operationalDuration >= processAlertCriticalMs ? "critical" : "moderate";
       const waveNumber = normalize(details.onda).match(/\d+/)?.[0] || "--";
       const responsible = details.repLog || "Operação";
-
-      return {
-        route: details.rota || route,
-        dock: details.doca || "--",
-        wave: waveNumber === "--" ? waveNumber : String(waveNumber).padStart(2, "0"),
-        status: normalizedStatus,
-        severity,
-        priority: severity === "critical" ? "Alta" : "Média",
-        responsible,
-        durationMs: activeProcess.durationMs,
-        durationLabel: formatAlertDuration(activeProcess.durationMs),
-        source: activeProcess.source,
-        sourceLabel: activeProcess.sourceLabel,
-        startedAt,
-        generatedAt,
-        reason: `${normalizedStatus} acima do limite operacional de 20 minutos.`,
-        action: alertSuggestedAction(activeProcess.statusText)
-      };
+      return { route: details.rota || route, dock: details.doca || "--", wave: waveNumber === "--" ? waveNumber : String(waveNumber).padStart(2, "0"),
+        status: normalizedStatus, severity, priority: severity === "critical" ? "Alta" : "Média", responsible,
+        durationMs: operationalDuration, durationLabel: formatAlertDuration(operationalDuration), source: "operacional", sourceLabel: "Base operacional",
+        startedAt, generatedAt, reason: `${normalizedStatus} acima do limite operacional de 20 minutos.`, action: alertSuggestedAction(operationalStatusText) };
     }
 
     function processAlerts() {
@@ -13433,8 +13157,6 @@ body.editor-open .global-theme-toggle {
 
     function historyStatus(row = {}) {
       return normalizeBaseStatus(row.processo || row.status)
-        || (/conclu/i.test(normalize(row.estadoAduana)) ? "Aduana concluída" : "")
-        || normalize(row.estadoAduana)
         || normalize(row.processo)
         || normalize(row.status)
         || "--";
@@ -13447,55 +13169,19 @@ body.editor-open .global-theme-toggle {
 
     function routeLifecycleTimes(route, rows = routeHistoryRows(route)) {
       const key = routeKey(route);
-
-      const aduanaStart = firstHistoryTime(rows, row =>
-        row.fonte === "aduana" &&
-        (
-          normalizeBaseStatus(row.status) === "Em aduana" ||
-          /andamento|aduana/i.test(normalize(row.estadoAduana)) ||
-          normalize(row.repLog) ||
-          normalize(row.auditTime)
-        )
-      );
-
-      let aduanaEnd = firstHistoryTime(rows, row =>
-        row.fonte === "aduana" && /conclu|finaliz|encerr/i.test(normalize(row.estadoAduana))
-      );
-      if (!aduanaEnd && aduanaStart) {
-        aduanaEnd = firstHistoryTime(rows, row =>
-          new Date(row.atualizadoEm || 0) > new Date(aduanaStart) &&
-          row.fonte === "operacional" &&
-          ["Guardando", "Expedida"].includes(normalizeBaseStatus(row.processo || row.status))
-        );
-      }
-
       const historyLoadStart = firstHistoryTime(rows, row =>
         row.fonte === "operacional" && normalizeBaseStatus(row.processo || row.status) === "Guardando"
       );
       const loadingStart = Number(data.carregamentoInicio?.[key] || 0) || (historyLoadStart ? new Date(historyLoadStart).getTime() : 0);
-
       const historyLoadEnd = firstHistoryTime(rows, row =>
         row.fonte === "operacional" && normalizeBaseStatus(row.processo || row.status) === "Expedida"
       );
       const loadingEnd = Number(data.carregamentoFim?.[key] || 0) || (historyLoadEnd ? new Date(historyLoadEnd).getTime() : 0);
-
-      // A Base atual registra "Expedida" como ocorrência final.
-      // Se não houver um evento separado de início/fim de expedição, mostramos o que é realmente conhecido.
       const expeditionEnd = historyLoadEnd ? new Date(historyLoadEnd).getTime() : 0;
       const expeditionStart = firstHistoryTime(rows, row =>
-        row.fonte === "operacional" &&
-        /expedi[cç][aã]o inici|iniciando expedi/i.test(plainText(row.processo || row.status))
+        row.fonte === "operacional" && /expedi[cç][aã]o inici|iniciando expedi/i.test(plainText(row.processo || row.status))
       );
-      const expeditionStartMs = expeditionStart ? new Date(expeditionStart).getTime() : 0;
-
-      return {
-        aduanaStart: aduanaStart ? new Date(aduanaStart).getTime() : 0,
-        aduanaEnd: aduanaEnd ? new Date(aduanaEnd).getTime() : 0,
-        loadingStart,
-        loadingEnd,
-        expeditionStart: expeditionStartMs,
-        expeditionEnd
-      };
+      return { loadingStart, loadingEnd, expeditionStart: expeditionStart ? new Date(expeditionStart).getTime() : 0, expeditionEnd };
     }
 
     function historyMomentParts(value) {
@@ -13533,7 +13219,7 @@ body.editor-open .global-theme-toggle {
     }
 
     function historyStatusMeta(details = {}) {
-      const status = normalizeBaseStatus(details.processo || details.status) || normalizeBaseStatus(details.estadoAduana);
+      const status = normalizeBaseStatus(details.processo || details.status);
       if (status === "Expedida") return { label: "Expedida", className: "loaded" };
       if (status === "Guardando") return { label: "Guardando pacote", className: "loading" };
       if (status === "Em aduana") return { label: "Aduana em andamento", className: "customs" };
@@ -13559,11 +13245,8 @@ body.editor-open .global-theme-toggle {
 
       const qrCandidates = rows
         .filter(row => {
-          const processStatus = normalizeBaseStatus(row.processo || row.status || row.estadoAduana);
-          const customsStatus = row.fonte === "aduana"
-            ? normalizeBaseStatus(row.estadoAduana || row.processo || row.status)
-            : "";
-          return processStatus === "Em aduana" || customsStatus === "Em aduana";
+          const processStatus = normalizeBaseStatus(row.processo || row.status);
+          return row.fonte === "operacional" && processStatus === "Em aduana";
         })
         .map(calculatedRowTime);
       const qrBip = earliest(qrCandidates);
@@ -15340,7 +15023,7 @@ body.editor-open .global-theme-toggle {
     }
 
     function clearPasteTarget(targetId = "") {
-      const allowedTargets = ["extracaoPaste", "basePaste", "aduanaPaste"];
+      const allowedTargets = ["extracaoPaste", "basePaste"];
       if (!allowedTargets.includes(targetId)) return false;
       const textarea = document.getElementById(targetId);
       if (!textarea) return false;
@@ -15359,16 +15042,11 @@ body.editor-open .global-theme-toggle {
         data.carregamentoInicio = {};
         data.carregamentoFim = {};
         rebuildConsolidatedBase(data.extracao || []);
-      } else {
-        data.baseAduana = [];
-        data.baseHistorico = (data.baseHistorico || []).filter(row => row.fonte !== "aduana");
-        rebuildConsolidatedBase(data.extracao || []);
       }
 
       const statusMessages = {
         extracaoPaste: "Extração limpa. Painel atualizado.",
-        basePaste: "Base operacional limpa. Status das docas atualizados.",
-        aduanaPaste: "Base aduana limpa. Histórico da Aduana atualizado."
+        basePaste: "Base operacional limpa. Status das docas atualizados."
       };
       document.getElementById("pasteClearStatus").textContent = statusMessages[targetId];
       saveData();
@@ -15377,11 +15055,10 @@ body.editor-open .global-theme-toggle {
       return true;
     }
 
-    // Deixa Base Operacional e Base Aduana prontas para a próxima colagem
+    // Deixa a Base Operacional pronta para a próxima colagem
     // sempre que o Editor de Dados for aberto.
     function prepareBasesWhenOpeningEditor() {
       const baseOperacional = document.getElementById("basePaste");
-      const baseAduana = document.getElementById("aduanaPaste");
 
       const prepareField = textarea => {
         if (!textarea) return;
@@ -15399,9 +15076,8 @@ body.editor-open .global-theme-toggle {
         textarea.scrollTop = textarea.scrollHeight;
       };
 
-      // As duas bases ficam preparadas na próxima linha livre.
+      // A Base Operacional fica preparada na próxima linha livre.
       prepareField(baseOperacional);
-      prepareField(baseAduana);
 
       // O cursor ativo começa automaticamente na Base Operacional.
       window.setTimeout(() => {
@@ -15421,14 +15097,12 @@ body.editor-open .global-theme-toggle {
       document.getElementById("extracaoPaste").value = toPaste(data.extracao);
       document.getElementById("basePaste").value = toBasePaste(data.baseOperacional || data.base || [], "operacional");
       document.getElementById("basePaste").placeholder = "Cole a atualização operacional. As rotas precisam existir na Extração.";
-      document.getElementById("aduanaPaste").value = toBasePaste(data.baseAduana || [], "aduana");
-      document.getElementById("aduanaPaste").placeholder = "Cole Processo e Tempo do processo da Aduana. Aceita Aduana em andamento, Contagem de pacotes e Em contagem.";
       document.getElementById("pasteClearStatus").textContent = "";
       document.getElementById("drawer").classList.add("open");
       document.querySelector(".app")?.classList.add("editor-open");
       document.body.classList.add("editor-open");
 
-      // Ao abrir, deixa as duas bases na próxima linha livre e
+      // Ao abrir, deixa a Base Operacional na próxima linha livre e
       // posiciona o cursor automaticamente na Base Operacional.
       prepareBasesWhenOpeningEditor();
     }
@@ -15504,8 +15178,8 @@ body.editor-open .global-theme-toggle {
         data.motivosCustomizados = Array.isArray(data.motivosCustomizados) ? data.motivosCustomizados : [];
         normalizeJustificationStore();
         data.baseOperacional = Array.isArray(data.baseOperacional) ? data.baseOperacional : (Array.isArray(data.base) ? data.base : []);
-        data.baseAduana = Array.isArray(data.baseAduana) ? data.baseAduana : [];
-        data.baseHistorico = Array.isArray(data.baseHistorico) ? data.baseHistorico : [];
+    delete data.baseAduana;
+            data.baseHistorico = (Array.isArray(data.baseHistorico) ? data.baseHistorico : []).filter(row => row.fonte !== "aduana");
         rebuildConsolidatedBase(data.extracao || []);
         data.carregamentoInicio = data.carregamentoInicio || {};
         data.carregamentoFim = data.carregamentoFim || {};
@@ -15748,7 +15422,7 @@ body.editor-open .global-theme-toggle {
     }
 
 
-    // COLAGEM CONTÍNUA - BASE OPERACIONAL / BASE ADUANA
+    // COLAGEM CONTÍNUA - BASE OPERACIONAL
 
     function prepareContinuousPaste(textarea) {
       if (!textarea) return;
@@ -15824,7 +15498,6 @@ body.editor-open .global-theme-toggle {
     }
 
     prepareContinuousPaste(document.getElementById("basePaste"));
-    prepareContinuousPaste(document.getElementById("aduanaPaste"));
 
     document.getElementById("editBtn").addEventListener("click", openDrawer);
     document.getElementById("refreshSyncBtn").addEventListener("click", refreshPanelFromCloud);
@@ -16054,7 +15727,6 @@ body.editor-open .global-theme-toggle {
       currentWave = data.ondas[0];
       document.getElementById("extracaoPaste").value = toPaste(data.extracao);
       document.getElementById("basePaste").value = toBasePaste(data.baseOperacional || data.base || [], "operacional");
-      document.getElementById("aduanaPaste").value = toBasePaste(data.baseAduana || [], "aduana");
       localStorage.removeItem(storageKey);
       render();
     });
@@ -16068,27 +15740,22 @@ body.editor-open .global-theme-toggle {
       if (!requireAdminAction()) return;
       const extractionText = document.getElementById("extracaoPaste").value;
       const operationalText = document.getElementById("basePaste").value;
-      const aduanaText = document.getElementById("aduanaPaste").value;
       const nextExtracao = parsePaste(extractionText);
       const previousExtractionRows = (data.extracao || []).length;
       const mergedExtracao = mergeExtractionRows(data.extracao || [], nextExtracao);
 
       // A Base nunca cria rota. Sem planejamento válido na Extração, nenhuma Base é aplicada.
-      if (!mergedExtracao.length && (normalize(operationalText) || normalize(aduanaText))) {
+      if (!mergedExtracao.length && normalize(operationalText)) {
         alert("A Base depende da Extração. Cole/aplique primeiro um planejamento válido na Extração.");
         return;
       }
 
-      const incomingOperational = parseBasePaste(operationalText, "operacional");
-      const incomingAduana = parseBasePaste(aduanaText, "aduana").filter(isAduanaDetailRow);
+      const incomingOperational = parseBasePaste(operationalText);
       const planned = plannedRouteKeys(mergedExtracao);
       const validOperational = incomingOperational.filter(row => planned.has(routeKey(row.rota)));
-      const validAduana = incomingAduana.filter(row => planned.has(routeKey(row.rota)));
 
       data.baseOperacional = mergeLatestBaseRows(data.baseOperacional || data.base || [], validOperational);
-      data.baseAduana = mergeLatestBaseRows(data.baseAduana || [], validAduana);
       appendBaseHistory("operacional", validOperational);
-      appendBaseHistory("aduana", validAduana);
 
       data = {
         ...data,
@@ -16096,7 +15763,6 @@ body.editor-open .global-theme-toggle {
         data: normalize(document.getElementById("dataInput").value),
         extracao: mergedExtracao,
         baseOperacional: data.baseOperacional,
-        baseAduana: data.baseAduana,
         baseHistorico: data.baseHistorico,
         carregamentoInicio: data.carregamentoInicio,
         carregamentoFim: data.carregamentoFim
