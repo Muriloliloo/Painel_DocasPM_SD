@@ -263,3 +263,62 @@ body:not(.dark-mode) .app.docas-mode:not(.simple-docks-mode):not(.routes-mode):n
     transition: none;
   }
 }
+
+/* OOT TOOLBAR HOVER PM-SD 2026-10-19
+   Mesma interação do menu lateral, sem modificar ações, horários ou posições. */
+.app:is(.docas-mode, .report-mode) .toolbar :is(.view-switch button, .actions button, .auth-badge),
+.app:is(.docas-mode, .report-mode) .toolbar .wave-selector {
+  transition: transform 180ms ease, background-color 180ms ease,
+              border-color 180ms ease, color 180ms ease, box-shadow 180ms ease,
+              filter 180ms ease;
+}
+.app:is(.docas-mode, .report-mode) .toolbar :is(.view-switch button, .actions button, .auth-badge):not(:disabled) {
+  cursor: pointer;
+  transform-origin: center;
+}
+.app:is(.docas-mode, .report-mode) .toolbar :is(.view-switch button, .actions button, .auth-badge):not(:disabled):is(:hover, :focus-visible) {
+  transform: translateY(-2px) scale(1.025);
+  background: #e7f4ff;
+  color: #063354;
+  border-color: #ffd200;
+  box-shadow: 0 4px 12px rgba(0, 11, 32, .24);
+  filter: brightness(1.025);
+  outline: none;
+}
+.app:is(.docas-mode, .report-mode) .toolbar .actions :is(button, .auth-badge):not(:disabled):is(:hover, :focus-visible) {
+  background: #15527b;
+  color: #fff;
+  border-color: #ffd200;
+  box-shadow: 0 4px 12px rgba(0, 11, 32, .3);
+}
+.app:is(.docas-mode, .report-mode) .toolbar .wave-selector:is(:hover, :focus-within) {
+  transform: translateY(-2px);
+  background: #154a70;
+  border-color: #ffe15c;
+  border-bottom-color: #ffd200;
+  box-shadow: 0 4px 13px rgba(0, 11, 32, .32);
+}
+.app:is(.docas-mode, .report-mode) .toolbar .wave-selector:is(:hover, :focus-within) select {
+  cursor: pointer;
+}
+body.dark-mode .app:is(.docas-mode, .report-mode) .toolbar :is(.view-switch button, .actions button, .auth-badge):not(:disabled):is(:hover, :focus-visible) {
+  background: #225a78 !important;
+  color: #fff !important;
+  border-color: #ffd200 !important;
+  box-shadow: 0 4px 13px rgba(0, 0, 0, .35) !important;
+}
+body.dark-mode .app:is(.docas-mode, .report-mode) .toolbar .wave-selector:is(:hover, :focus-within) {
+  background: #225a78 !important;
+  border-color: #ffd200 !important;
+  box-shadow: 0 4px 13px rgba(0, 0, 0, .35) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app:is(.docas-mode, .report-mode) .toolbar :is(.view-switch button, .actions button, .auth-badge),
+  .app:is(.docas-mode, .report-mode) .toolbar .wave-selector {
+    transition: none;
+  }
+  .app:is(.docas-mode, .report-mode) .toolbar :is(.view-switch button, .actions button, .auth-badge):not(:disabled):is(:hover, :focus-visible),
+  .app:is(.docas-mode, .report-mode) .toolbar .wave-selector:is(:hover, :focus-within) {
+    transform: none;
+  }
+}
