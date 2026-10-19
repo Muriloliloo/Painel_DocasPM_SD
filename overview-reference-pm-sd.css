@@ -5,6 +5,7 @@
 .app.docas-mode:not(.simple-docks-mode):not(.routes-mode):not(.dashboard-mode) {
   --docas-card-gap: clamp(5px, .43vw, 8px);
   --docas-grid-gap: clamp(17px, 1.48vw, 28px);
+  --oot-menu-gap: 8px;
   --docas-stats-h: clamp(60px, 4vw, 68px);
   --docas-route-font: clamp(12px, .94vw, 19px);
   --docas-name-font: clamp(8px, .55vw, 10px);
@@ -15,9 +16,9 @@
 
 /* Faixa completa de indicadores sem sacrificar a largura das docas. */
 .app.docas-mode:not(.simple-docks-mode):not(.routes-mode):not(.dashboard-mode) .stats {
-  width: calc(100% - 18px) !important;
+  width: calc(100% - var(--docas-rail-w) - (var(--oot-menu-gap) * 2)) !important;
   height: var(--docas-stats-h);
-  margin: 7px 9px 0 !important;
+  margin: 7px var(--oot-menu-gap) 0 calc(var(--docas-rail-w) + var(--oot-menu-gap)) !important;
   padding: 6px 10px;
   grid-template-columns: minmax(235px, 2.3fr) repeat(8, minmax(73px, 1fr)) minmax(79px, 1fr);
   border: 1px solid #cedae6;
@@ -73,11 +74,11 @@
   display: grid !important;
   grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
   grid-template-rows: minmax(0, 1fr);
-  width: calc(100% - 18px) !important;
+  width: calc(100% - var(--docas-rail-w) - (var(--oot-menu-gap) * 2)) !important;
   height: calc(100dvh - var(--docas-grid-offset)) !important;
   min-height: 380px !important;
   max-height: none !important;
-  margin: 8px 9px 8px !important;
+  margin: 8px var(--oot-menu-gap) 8px calc(var(--docas-rail-w) + var(--oot-menu-gap)) !important;
   padding: 0 !important;
   column-gap: var(--docas-card-gap) !important;
   align-self: stretch;
@@ -173,41 +174,64 @@ body:not(.dark-mode) .app.docas-mode:not(.simple-docks-mode):not(.routes-mode):n
   outline-offset: -2px;
 }
 
-/* A navegação continua disponível sem comprimir a grade:
-   passe o mouse na aba vertical "MENU" ou navegue por Tab. */
+/* Menu esquerdo PM / SD / SDE1: sempre visível, sem overlay nos cards.
+   Realce interativo no hover e teclado, sem recolher nem mudar a largura. */
 .app.docas-mode:not(.simple-docks-mode):not(.routes-mode):not(.dashboard-mode) .side-rail {
   z-index: 25;
   left: 0;
-  width: clamp(70px, 4vw, 84px);
-  transform: translateX(calc(-100% + 12px));
-  transition: transform 170ms ease;
-  box-shadow: 4px 0 12px rgba(3, 30, 53, .12);
-}
-.app.docas-mode:not(.simple-docks-mode):not(.routes-mode):not(.dashboard-mode) .side-rail:hover,
-.app.docas-mode:not(.simple-docks-mode):not(.routes-mode):not(.dashboard-mode) .side-rail:focus-within {
-  transform: translateX(0);
+  width: var(--docas-rail-w);
+  transform: none !important;
+  transition: none;
+  box-shadow: 2px 0 9px rgba(3, 30, 53, .12);
 }
 .app.docas-mode:not(.simple-docks-mode):not(.routes-mode):not(.dashboard-mode) .side-rail::after {
-  content: "MENU";
-  position: absolute;
-  right: 0;
-  top: 11px;
-  width: 12px;
-  height: 58px;
-  display: grid;
-  place-items: center;
-  writing-mode: vertical-rl;
-  font: 900 9px/1 "Segoe UI", Arial, sans-serif;
-  letter-spacing: .1em;
-  color: #ffd200;
-  pointer-events: none;
+  content: none !important;
+  display: none !important;
 }
-.app.docas-mode:not(.simple-docks-mode):not(.routes-mode):not(.dashboard-mode) .side-rail:is(:hover, :focus-within)::after {
-  display: none;
+.app.docas-mode .side-rail button,
+.app.report-mode .side-rail button {
+  position: relative;
+  border-radius: 0 8px 8px 0;
+  transition: background-color 170ms ease, color 170ms ease, border-color 170ms ease,
+              box-shadow 170ms ease, transform 170ms ease;
+}
+.app.docas-mode .side-rail button:is(:hover, :focus-visible),
+.app.report-mode .side-rail button:is(:hover, :focus-visible) {
+  transform: translateX(2px);
+  background: #14547c;
+  color: #fff;
+  border-left-color: #ffd200;
+  box-shadow: inset 0 0 0 1px rgba(255, 210, 0, .22);
+  outline: none;
+}
+.app.docas-mode .side-rail button.active,
+.app.report-mode .side-rail button.active {
+  border-left-color: #ffd200;
+  color: #ffd200;
+  background: #0b3b5e;
+}
+.app.docas-mode .side-rail button.active:is(:hover, :focus-visible),
+.app.report-mode .side-rail button.active:is(:hover, :focus-visible) {
+  background: #14547c;
+  color: #ffd200;
+}
+.app.docas-mode .side-rail .rail-icon,
+.app.report-mode .side-rail .rail-icon {
+  transition: transform 170ms ease, color 170ms ease;
+}
+.app.docas-mode .side-rail button:is(:hover, :focus-visible) .rail-icon,
+.app.report-mode .side-rail button:is(:hover, :focus-visible) .rail-icon {
+  transform: scale(1.14);
+}
+.app.docas-mode .side-rail :is(#overviewRailBtn, #simpleDocksBtn, #routeHistoryBtn,
+  #fullHistoryBtn, #alertsBtn, #dashboardRailBtn),
+.app.report-mode .side-rail :is(#overviewRailBtn, #simpleDocksBtn, #routeHistoryBtn,
+  #fullHistoryBtn, #alertsBtn, #dashboardRailBtn) {
+  cursor: pointer;
 }
 .app.docas-mode:not(.simple-docks-mode):not(.routes-mode):not(.dashboard-mode) .legend {
-  left: 12px;
-  right: 12px;
+  left: calc(var(--docas-rail-w) + var(--oot-menu-gap));
+  right: var(--oot-menu-gap);
 }
 
 /* O editor continua sobreposto sem reformatar seus campos. */
@@ -232,7 +256,10 @@ body:not(.dark-mode) .app.docas-mode:not(.simple-docks-mode):not(.routes-mode):n
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .app.docas-mode:not(.simple-docks-mode):not(.routes-mode):not(.dashboard-mode) .side-rail {
+  .app.docas-mode .side-rail button,
+  .app.report-mode .side-rail button,
+  .app.docas-mode .side-rail .rail-icon,
+  .app.report-mode .side-rail .rail-icon {
     transition: none;
   }
 }
