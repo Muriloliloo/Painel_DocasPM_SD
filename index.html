@@ -12218,17 +12218,20 @@ body.editor-open .global-theme-toggle {
 
 
     const dockLayoutBlocks = [
-      [[1, 2, 3, 4, 5, 6, 7], [8, 9, 10, 11, 12, 13, 14]],
-      [[18, 19, 20, 21, 22, 23, 24], [25, 26, 27, 28, 29, 30, 31], [32, 33, 34, 35, 36, 37, 38], [39, 40, 41, 42, 43, 44, 45]],
-      [[51, 52, 53, 54, 55, 56, 57], [58, 59, 60, 61, 62, 63, 64], [65, 66, 67, 68, 69, 70, 71], [72, 73, 74, 75, 76, 77, 78], [79, 80, 81, 82, 83, 84, 85], [86, 87, 88, 89, 90, 91, 92]]
+      [[9, 10, 11, 12, 13, 14, 15]],
+      [[16, 17, 18, 19, 20, 21, 22], [23, 24, 25, 26, 27, 28, 29], [30, 0, 0, 0, 0, 0, 0], [31, 32, 33, 34, 35, 36, 37], [38, 39, 40, 41, 42, 43, 44], [45, 46, 47, 48, 49, 50, 51], [52, 53, 54, 55, 56, 0, 0]],
+      [[57, 58, 59, 60, 61, 62, 63], [64, 65, 66, 67, 68, 69, 70], [71, 0, 0, 0, 0, 0, 0], [86, 87, 88, 89, 90, 91, 92]]
     ];
 
     const dockZoneLabels = [
-      [{ label: "Lado Heineken", column: 1, span: 2, range: "docas 01 e 02" }],
-      [{ label: "Lado Central", column: 1, span: 4, range: "docas 18 a 39" }],
+      [{ label: "Lado Heineken", displayLabel: "A (09–15) · Heineken", column: 1, span: 1, range: "docas 09 a 15" }],
       [
-        { label: "Lado Parede", column: 1, span: 5, range: "docas 51 a 79" },
-        { label: "Line Hall", column: 6, span: 1, range: "doca 86" }
+        { label: "Lado Central B", legacyLabel: "Lado Central", displayLabel: "B (16–30) · Central", column: 1, span: 3, range: "docas 16 a 30" },
+        { label: "Lado Central C", legacyLabel: "Lado Central", displayLabel: "C (31–56) · Central", column: 4, span: 4, range: "docas 31 a 56" }
+      ],
+      [
+        { label: "Lado Parede", displayLabel: "D (57–71) · Parede", column: 1, span: 3, range: "docas 57 a 71" },
+        { label: "Line Hall", displayLabel: "E (86–92) · LH", column: 4, span: 1, range: "docas 86 a 92" }
       ]
     ];
 
@@ -13468,7 +13471,7 @@ body.editor-open .global-theme-toggle {
           const label = document.createElement("span");
           label.className = "dock-zone-label";
           label.style.gridColumn = `${zone.column} / span ${zone.span}`;
-          label.textContent = zone.label;
+          label.textContent = zone.displayLabel || zone.label;
           label.title = `${zone.label} — ${zone.range}`;
           label.setAttribute("aria-label", `${zone.label}, ${zone.range}`);
           zoneRow.appendChild(label);
