@@ -10065,7 +10065,16 @@ body.editor-open .global-theme-toggle {
     flex-basis: 96px;
   }
 }
-  </style>
+  
+    /* Grade do Overview: 12 colunas iguais e 7 posições por coluna. */
+    .app.docas-mode:not(.simple-docks-mode):not(.routes-mode):not(.dashboard-mode) #dockGrid{display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr))}
+    .app.docas-mode #dockGrid .dock-block{display:grid;grid-template-columns:repeat(var(--layout-columns),minmax(0,1fr));gap:var(--docas-card-gap)}
+    .app.docas-mode #dockGrid .dock-block.block-1{grid-column:span 1;--layout-columns:1}
+    .app.docas-mode #dockGrid .dock-block.block-2{grid-column:span 7;--layout-columns:7}
+    .app.docas-mode #dockGrid .dock-block.block-3{grid-column:span 4;--layout-columns:4}
+    .app.docas-mode #dockGrid .dock-column{min-height:0}
+    .app.docas-mode #dockGrid .dock-number,.app.docas-mode #dockGrid .dock-number-inline{font-size:clamp(11px,.88vw,17px);font-weight:950}
+</style>
 </head>
 <body>
   <main class="app">
