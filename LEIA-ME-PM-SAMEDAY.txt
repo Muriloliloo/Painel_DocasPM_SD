@@ -1,126 +1,57 @@
-COMO USAR O CONTROLE DE DOCAS - PM / SAME DAY / SDE1
+PAINEL DE DOCAS SSP15 — PM / SD / SDE1
+VERSÃO PORTÁTIL / OFFLINE — 05/11/2026
 
-1. Abra o index.html ou o link publicado no GitHub Pages.
-2. Para editar, entre com o acesso de Administrador no painel.
-3. Cole os dados da Extracao no campo "Extracao".
-4. Atualize somente a Base Operacional.
-5. Clique em "Aplicar".
+ESTA CÓPIA NÃO PRECISA DE INTERNET, GITHUB OU FIREBASE PARA FUNCIONAR.
+O PAINEL ONLINE ORIGINAL NÃO FOI ALTERADO.
 
-Este projeto e uma copia separada do Controle de Ondas AM. Ele trabalha somente com os ciclos PM, SD e SDE1.
+COMO INSTALAR NO COMPUTADOR (WINDOWS)
+1. Receba o arquivo ZIP pelo WhatsApp ou baixe a cópia offline.
+2. Clique com o botão direito no ZIP > Extrair Tudo.
+3. Mantenha TODOS os arquivos e a pasta "assets" juntos.
+4. Abra a pasta extraída e clique duas vezes em "index.html".
+5. O painel abrirá no navegador (Chrome ou Edge).
+6. Para deixar fixo na área de trabalho: botão direito em "index.html"
+   > Mostrar mais opções > Enviar para > Área de trabalho (criar atalho).
+   Você pode renomear o atalho para "Painel PM / SD".
 
+NÃO ABRA O INDEX.HTML DIRETAMENTE DENTRO DO ZIP.
+Extraia a pasta primeiro para que estilos, scripts e logos sejam carregados.
 
-CICLOS E HORARIOS
+USO SEM INTERNET
+- Não é preciso entrar com e-mail ou senha do Firebase.
+- Quem tiver esta cópia poderá editar os dados do próprio computador.
+- Editor de Dados, Justificativas, Docas, Dashboard e Fechamento usam informações locais.
+- Nenhuma alteração é enviada automaticamente para outros computadores.
+- Para atualizar dados operacionais, use o Editor de Dados e cole Extração/Base.
+- O histórico local só contém dados criados ou importados neste computador.
+- PDFs podem ser impressos pelo navegador; a captura de imagem usa biblioteca local.
 
-PM:
-
-- PM Onda 01: 13:20 ate 13:50 h
-- PM Onda 02: 13:50 ate 14:15 h
-- PM Onda 03: 14:15 ate 14:35 h
-
-SD:
-
-- SD Onda 01: 17:10 ate 17:30 h
-- SD Onda 02: 17:30 ate 18:00 h
-- SD Onda 03: 18:00 ate 18:30 h
-
-SDE1:
-
-- SDE1 Onda 01: 18:00 ate 18:30 h
-- SDE1 Onda 02: 18:30 ate 19:00 h
-
-
-EXTRACAO
-
-A Extracao monta as rotas nas docas e ondas.
-
-Para PM, se a linha vier apenas como "Onda 1", o painel entende como PM por padrao.
-Rotas com nomenclatura "_PM1", como D2_PM1, tambem sao identificadas como PM.
-
-Exemplo PM:
-
-PM Onda 1    VP11_AM1    1    FLYPACK
-PM Onda 2    VP10_AM1    2    Flight Cargo
-PM Onda 3    VA11_AM1    3    HAWK TRANSPORTES LTDA
-
-Para SD, a linha pode conter "SD", "Same Day", "Sameday" ou "SD101" para o painel separar corretamente do PM.
-Rotas com nomenclatura "_SD", como VN1_SD, tambem sao identificadas como SD.
-
-Exemplo SD:
-
-SD Onda 1    VN1_SD    52    UNICA TRANSPORTES
-SD Onda 2    VH2_SD    56    PANTERA LOG TRAN
-SD Onda 3    VL2_SD    60    PANTERA LOG TRAN
-
-Para SDE1, o painel aceita "SDE1 Onda 1", "SDE1 Onda 2", "SDE1 OLA 1" e "SDE1 OLA 2".
-Rotas com nomenclatura "_SDE1" tambem sao identificadas como SDE1.
-
-Tambem aceita tabela completa com mais colunas. O painel ignora o que nao precisa.
-
-
-BASE
-
-A Base Operacional serve para informar quais rotas ja subiram o QR, estao em processo ou foram expedidas.
-
-Pode colar so a rota:
-
-VP11_AM1
-VP10_AM1
-VA11_AM1
-
-Ou pode colar a linha vinda do sistema com informacoes extras:
-
-VP11_AM1    Guardando    3 minutos    21 minutos    1
-VA11_AM1    Expedida    -    4 minutos    3
-
-O painel considera apenas:
-
-- Rota
-- Processo ou status
-- Tempo do processo
-- Tempo total
-- Doca operacional
-
-Todo o restante e ignorado.
-
-A Base Aduana foi removida. Todo processo, status, tempo e doca operacional devem vir pela Base Operacional.
-
-Se a mesma rota aparecer duplicada na Base, o cronometro nao reinicia.
-
-
-CORES DAS DOCAS
-
-- Vermelho: rota planejada, mas ainda nao carregada.
-- Verde: rota carregada na Base.
-- Laranja: rota carregada ha mais de 30 minutos.
-- Cinza: doca vazia.
-
-Se a rota ficar laranja, ela continua laranja mesmo se for expedida ou se a onda terminar.
-
-
-JUSTIFICATIVAS
-
-1. Clique na aba "Justificativas".
-2. Escolha um motivo em "Motivo em massa".
-3. Clique em "Selecionar rotas" para preencher somente as rotas pendentes sem justificativa.
-4. Clique em "Aplicar motivo".
-
-
-PDF
-
-Clique em "PDF" para escolher:
-
-- quais ondas imprimir;
-- intervalo de docas;
-- relatorio de Docas;
-- relatorio de Justificativas;
-- relatorio de Fechamento.
-
-Tambem pode usar Ctrl+P no navegador.
-
+SALVAR E LEVAR DADOS PARA OUTRO COMPUTADOR
+- Clique em "Salvar backup": será baixado um arquivo JSON.
+- Guarde o JSON junto aos seus documentos.
+- Para recuperar ou transferir os dados, clique em "Abrir backup" e selecione o JSON.
+- Atenção: restaurar um backup substitui os dados atuais daquele computador.
+- O navegador também pode guardar dados localmente, mas eles podem sumir se o
+  usuário limpar os dados de navegação, mudar de navegador ou mover o arquivo.
+  Por isso, faça BACKUP regularmente.
 
 ARQUIVOS PRINCIPAIS
+- index.html: clique duas vezes para abrir o painel.
+- offline-utilities.css: estilos e ícones disponíveis sem internet.
+- overview-reference-pm-sd.css: estilos complementares locais.
+- html2canvas.min.js: captura de imagens sem CDN.
+- ondas-pm-sameday-dados.js: configuração e dados iniciais.
+- assets/: logos utilizados no painel.
 
-- ondas-pm-sameday.html: arquivo principal para abrir o painel.
-- ondas-pm-sameday-dados.js: dados iniciais e horarios do PM/Same Day.
-- assets: pasta com logos da DHL e Mercado Livre.
-- controle-docas-pm-sameday-whatsapp.zip: pacote pronto para enviar.
+IMPORTANTE
+- Esta é uma CÓPIA estática e independente do painel online PM/SD.
+- Novas atualizações do projeto online NÃO aparecem automaticamente aqui.
+- O painel não busca novos dados do Mercado Livre ou do Firebase sozinho.
+- Arquivos gerados pelo painel ficam salvos no próprio computador.
+- Para compartilhar os dados atualizados com outra pessoa, envie o backup JSON.
+
+Se o navegador bloquear armazenamento local, use "Salvar backup" antes de fechar
+e "Abrir backup" quando reabrir o painel.
+
+PROJETO DE ORIGEM (somente referência):
+https://muriloliloo.github.io/Painel_DocasPM_SD/
