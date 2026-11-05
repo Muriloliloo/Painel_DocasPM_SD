@@ -1,36 +1,19 @@
-# Controle de Docas SSP15 - PM, SD e SDE1
+# Painel de Docas SSP15 — PM / SD / SDE1 (Offline)
 
-Painel web para acompanhamento operacional das ondas PM, Same Day (SD) e SDE1, alinhado a estrutura do Painel_DocasAM1.
+Esta é a **cópia portátil para Windows**, criada separadamente da versão publicada. Funciona no navegador **sem internet, sem login, sem GitHub Pages e sem Firebase**.
 
-## Recursos
+## Abrir no computador
 
-- Controle de 92 docas por onda.
-- Modos de visualizacao, alertas e acompanhamento de status.
-- Base Operacional unica, com atualizacao cumulativa.
-- Historico por rota e acompanhamento de tempos.
-- Justificativas, resumo OOT, fechamento executivo e Farol da Expedicao.
-- Exportacao de fechamento em imagem.
-- Firebase com perfis Administrador/Leitor e sincronizacao entre dispositivos.
+1. Extraia o ZIP completamente.
+2. Abra a pasta extraída e dê dois cliques em **`index.html`**.
+3. Use Chrome ou Microsoft Edge e crie um atalho para `index.html` na Área de Trabalho.
 
-## Ciclos e horarios oficiais
+Os arquivos `index.html`, `offline-utilities.css`, `overview-reference-pm-sd.css`, `html2canvas.min.js`, `ondas-pm-sameday-dados.js` e a pasta `assets` devem permanecer juntos.
 
-- PM Onda 01: 13:20-13:50
-- PM Onda 02: 13:50-14:15
-- PM Onda 03: 14:15-14:35
-- SD Onda 01: 17:10-17:30
-- SD Onda 02: 17:30-18:00
-- SD Onda 03: 18:00-18:30
-- SDE1 Onda 01: 18:00-18:30
-- SDE1 Onda 02: 18:30-19:00
+## Salvamento e transferência
 
-## Arquivos principais
+As alterações são **locais**, de cada computador. Utilize **Salvar backup** para exportar um arquivo JSON e **Abrir backup** para importar esse arquivo em outro computador. Faça backup regularmente — limpar os dados do navegador pode apagar os registros locais.
 
-- `index.html`: painel principal publicado pelo GitHub Pages.
-- `ondas-pm-sameday-dados.js`: ondas e horarios oficiais do PM/SD/SDE1.
-- `firebase-config.js`: configuracao de sincronizacao; usa o documento `docas-pm-sd`.
-- `html2canvas.min.js`: suporte a exportacao de imagens.
-- `LEIA-ME-PM-SAMEDAY.txt`: orientacao operacional.
+> O painel **não sincroniza dados entre computadores** e não recebe atualizações automáticas. O arquivo ZIP e o painel publicado são versões independentes.
 
-## Observacao operacional
-
-A Base Aduana foi removida do editor e da logica do projeto. A Base Operacional e a fonte unica para processo, status, tempo e doca operacional.
+Para instruções detalhadas, abra **`LEIA-ME-PM-SAMEDAY.txt`**.
