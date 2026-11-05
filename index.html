@@ -4,26 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Controle de Docas - SSP15 São Vicente</title>
-  <script>
-    window.tailwind = window.tailwind || {};
-    window.tailwind.config = {
-      prefix: "tw-",
-      corePlugins: { preflight: false },
-      theme: {
-        extend: {
-          colors: {
-            ootNavy: "#063354",
-            ootPanel: "#e8f0f7",
-            ootLine: "#cbd7e3",
-            ootYellow: "#ffc928"
-          }
-        }
-      }
-    };
-  </script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./offline-utilities.css">
   <script src="./html2canvas.min.js" defer></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
   <style>
     :root {
       --yellow: #ffd200;
@@ -10105,11 +10087,11 @@ body.editor-open .global-theme-toggle {
         <button type="button" data-view="fechamentoExecutivo">Fechamento Executivo</button>
       </section>
       <div class="actions">
-        <button id="refreshSyncBtn" class="sync-refresh-btn" type="button" title="Atualizar dados do painel" aria-label="Atualizar dados do painel">
-          <i class="bi bi-arrow-clockwise" aria-hidden="true"></i><span class="sync-refresh-label">Atualizar</span>
+        <button id="refreshSyncBtn" class="sync-refresh-btn" type="button" title="Atualizar a tela com os dados locais" aria-label="Atualizar a tela com os dados locais">
+          <i class="bi bi-arrow-clockwise" aria-hidden="true"></i><span class="sync-refresh-label">Atualizar tela</span>
         </button>
         <span class="sync-refresh-status" id="syncRefreshStatus" role="status" aria-live="polite"></span>
-        <button id="authBtn" class="auth-badge" type="button"><span>Firebase</span><strong>Local</strong></button>
+        <button id="authBtn" class="auth-badge" type="button"><span>SEM REDE</span><strong>LOCAL</strong></button>
         <button id="testTimerBtn" class="test-mode admin-only" type="button">Teste</button>
         <button id="toggleTimersBtn" class="timer-toggle" type="button" hidden aria-hidden="true">Cronômetro</button>
         <button id="editBtn" class="admin-only" type="button">Editar dados</button>
@@ -10719,10 +10701,10 @@ body.editor-open .global-theme-toggle {
     </div>
   </div>
 
-  <script src="firebase-config.js"></script>
+  <script>window.OFFLINE_PAINEL = true; window.FIREBASE_ENABLED = false;</script>
   <script src="ondas-pm-sameday-dados.js"></script>
   <script>
-    const storageKey = "ondas-pm-sameday-dados";
+    const storageKey = "ondas-pm-sameday-offline-v1";
     const LOCAL_HISTORY_MAX_ROWS = 1200;
     const CLOUD_HISTORY_MAX_ROWS = 600;
     const CLOUD_HISTORY_MIN_ROWS = 100;
@@ -10738,7 +10720,7 @@ body.editor-open .global-theme-toggle {
       "SDE1 Onda 1": { inicio: "18:00", fim: "18:30" },
       "SDE1 Onda 2": { inicio: "18:30", fim: "19:00" }
     };
-    const savedData = JSON.parse(localStorage.getItem(storageKey) || "null");
+    const savedData = (() => { try { return JSON.parse(localStorage.getItem(storageKey) || "null"); } catch (_) { return null; } })();
     let data = savedData ? { ...originalData, ...savedData } : JSON.parse(JSON.stringify(originalData));
     data.docas = Math.max(Number(data.docas || 0), Number(originalData.docas || 92));
     originalData.horarios = { ...(originalData.horarios || {}), ...horariosOficiais };
@@ -10901,7 +10883,7 @@ body.editor-open .global-theme-toggle {
     }
 
     function isAdmin() {
-      return Boolean(cloudState.enabled && cloudState.user && cloudState.role === "admin");
+      return Boolean(window.OFFLINE_PAINEL || (cloudState.enabled && cloudState.user && cloudState.role === "admin"));
     }
 
     function canEditData() {
@@ -10909,15 +10891,16 @@ body.editor-open .global-theme-toggle {
     }
 
     function roleLabel() {
-      return isAdmin() ? "Admin" : "Leitor";
+      return window.OFFLINE_PAINEL ? "LOCAL" : (isAdmin() ? "Admin" : "Leitor");
     }
 
     function updateAuthBadge() {
       const button = document.getElementById("authBtn");
       if (!button) return;
       const admin = isAdmin();
-      const top = admin ? (cloudState.user?.email || "Administrador") : "Acesso ao painel";
-      button.title = admin ? top : "Modo leitor — clique para acesso administrativo";
+      const top = window.OFFLINE_PAINEL ? "Painel independente" : (admin ? (cloudState.user?.email || "Administrador") : "Acesso ao painel");
+      button.title = window.OFFLINE_PAINEL ? "Cópia local: sem Firebase, sem internet, com edição liberada" : (admin ? top : "Modo leitor — clique para acesso administrativo");
+      button.disabled = Boolean(window.OFFLINE_PAINEL);
       button.innerHTML = `<span>${admin ? top : "Painel"}</span><strong>${roleLabel()}</strong>`;
       document.querySelector(".app")?.classList.toggle("reader-mode", !admin);
       document.querySelectorAll(".admin-only").forEach(element => {
@@ -10926,11 +10909,11 @@ body.editor-open .global-theme-toggle {
       const loginButton = document.getElementById("loginBtn");
       const logoutButton = document.getElementById("logoutBtn");
       const sessionStatus = document.getElementById("loginSessionStatus");
-      if (loginButton) loginButton.hidden = admin;
-      if (logoutButton) logoutButton.hidden = !admin;
+      if (loginButton) loginButton.hidden = admin || Boolean(window.OFFLINE_PAINEL);
+      if (logoutButton) logoutButton.hidden = !admin || Boolean(window.OFFLINE_PAINEL);
       if (sessionStatus) {
         sessionStatus.textContent = admin
-          ? `Administrador conectado: ${cloudState.user?.email || "usuário autenticado"}`
+          ? window.OFFLINE_PAINEL ? "Edição local habilitada — sem sincronização" : `Administrador conectado: ${cloudState.user?.email || "usuário autenticado"}`
           : "";
         sessionStatus.classList.toggle("visible", admin);
       }
@@ -12019,8 +12002,9 @@ body.editor-open .global-theme-toggle {
       if (!cloudState.applyingRemote && advanceRevision) {
         data.syncRevision = nextSyncRevision();
       }
-      localStorage.setItem(storageKey, JSON.stringify(data));
-      if (!localOnly) saveDataToCloud();
+      try { localStorage.setItem(storageKey, JSON.stringify(data)); }
+      catch (error) { console.warn("Não foi possível salvar automaticamente. Utilize Exportar backup.", error); }
+      // Cópia local: nunca enviar alterações à nuvem.
     }
 
     function scheduleCloudRetry() {
@@ -15245,41 +15229,11 @@ body.editor-open .global-theme-toggle {
     }
 
     async function refreshPanelFromCloud() {
-      if (!cloudState.ready || !cloudState.docRef || !cloudState.authResolved) {
-        setRefreshSyncState("error", "Firebase ainda está conectando. Tente novamente em instantes.");
-        resetRefreshSyncState(3200);
-        return false;
-      }
-
-      setRefreshSyncState("loading", "Atualizando dados do painel...");
-      try {
-        if (isAdmin()) {
-          // No computador administrador, o botão publica o estado local correto antes da leitura.
-          data.syncRevision = nextSyncRevision();
-          localStorage.setItem(storageKey, JSON.stringify(data));
-          const saved = await saveDataToCloud();
-          if (!saved) throw new Error("Não foi possível publicar a atualização no Firebase.");
-        }
-
-        const snapshot = await cloudState.tools.getDoc(cloudState.docRef);
-        const payload = snapshot.exists() ? snapshot.data()?.payload : null;
-        if (!payload) throw new Error("O Firebase ainda não possui dados do painel.");
-        const applied = applyRemotePayload(payload, {
-          cloudSnapshot: true,
-          forceCloud: !isAdmin()
-        });
-        if (!applied && !isAdmin()) throw new Error("A atualização recebida não pôde ser aplicada.");
-
-        const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-        setRefreshSyncState("success", `Painel atualizado às ${time}.`);
-        resetRefreshSyncState();
-        return true;
-      } catch (error) {
-        console.warn("Atualização manual do painel falhou:", error);
-        setRefreshSyncState("error", error?.message || "Falha ao atualizar o painel.");
-        resetRefreshSyncState(4200);
-        return false;
-      }
+      // Esta versão atualiza apenas a tela a partir dos dados locais.
+      render();
+      setRefreshSyncState("success","Painel local atualizado (sem sincronização).");
+      resetRefreshSyncState();
+      return true;
     }
 
     function subscribePanel() {
@@ -15298,67 +15252,8 @@ body.editor-open .global-theme-toggle {
     let firebaseInitPromise = null;
 
     async function initializeFirebase() {
-      if (cloudState.ready && cloudState.auth && typeof cloudState.tools.signInWithEmailAndPassword === "function") {
-        return true;
-      }
-      if (firebaseInitPromise) return firebaseInitPromise;
-
-      firebaseInitPromise = (async () => {
-        cloudState.enabled = firebaseConfigured();
-        if (cloudState.enabled) cloudState.role = "leitor";
-        updateAuthBadge();
-        if (!cloudState.enabled) return false;
-
-        try {
-          const [appModule, authModule, firestoreModule] = await Promise.all([
-            import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
-            import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
-            import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
-          ]);
-          const app = appModule.getApps().length
-            ? appModule.getApp()
-            : appModule.initializeApp(window.FIREBASE_APP_CONFIG);
-          cloudState.auth = authModule.getAuth(app);
-          cloudState.db = firestoreModule.getFirestore(app);
-          cloudState.tools = {
-            signInWithEmailAndPassword: authModule.signInWithEmailAndPassword,
-            signOut: authModule.signOut,
-            onAuthStateChanged: authModule.onAuthStateChanged,
-            doc: firestoreModule.doc,
-            getDoc: firestoreModule.getDoc,
-            setDoc: firestoreModule.setDoc,
-            runTransaction: firestoreModule.runTransaction,
-            onSnapshot: firestoreModule.onSnapshot,
-            serverTimestamp: firestoreModule.serverTimestamp
-          };
-          const panel = window.FIREBASE_PANEL_DOC || {};
-          cloudState.docRef = cloudState.tools.doc(cloudState.db, panel.collection || "paineis", panel.document || "docas-pm-sd");
-          cloudState.ready = true;
-          cloudState.enabled = true;
-          cloudState.tools.onAuthStateChanged(cloudState.auth, async user => {
-            cloudState.user = user;
-            cloudState.role = user ? await resolveUserRole(user) : "leitor";
-            cloudState.authResolved = true;
-            cloudState.lastRemoteRevision = 0;
-            updateAuthBadge();
-            subscribePanel();
-            render();
-          });
-          return true;
-        } catch (error) {
-          cloudState.enabled = false;
-          cloudState.ready = false;
-          console.warn("Firebase não iniciou:", error);
-          updateAuthBadge();
-          return false;
-        }
-      })();
-
-      try {
-        return await firebaseInitPromise;
-      } finally {
-        firebaseInitPromise = null;
-      }
+      // Funcionalidade desativada na distribuição para uso sem internet.
+      return false;
     }
 
     async function loginFirebase() {
@@ -15515,6 +15410,7 @@ body.editor-open .global-theme-toggle {
     document.getElementById("editBtn").addEventListener("click", openDrawer);
     document.getElementById("refreshSyncBtn").addEventListener("click", refreshPanelFromCloud);
     document.getElementById("authBtn").addEventListener("click", async () => {
+      if (window.OFFLINE_PAINEL) return;
       const modal = document.getElementById("loginModal");
       const message = document.getElementById("loginMessage");
       modal.classList.add("open");
@@ -15799,9 +15695,72 @@ body.editor-open .global-theme-toggle {
       announceProcessAlerts();
     });
 
+    function setupOfflineControls() {
+      const actions=document.querySelector(".actions");
+      if (!actions || document.getElementById("offlineBackupBtn")) return;
+      const download=document.createElement("button");
+      download.id="offlineBackupBtn";
+      download.type="button";
+      download.className="sync-refresh-btn";
+      download.title="Baixar cópia dos dados deste computador";
+      download.textContent="Salvar backup";
+      const upload=document.createElement("button");
+      upload.id="offlineRestoreBtn";
+      upload.type="button";
+      upload.className="sync-refresh-btn";
+      upload.title="Restaurar um backup JSON salvo anteriormente";
+      upload.textContent="Abrir backup";
+      const input=document.createElement("input");
+      input.id="offlineRestoreInput";
+      input.type="file";
+      input.accept=".json,application/json";
+      input.hidden=true;
+      download.addEventListener("click",()=>{
+        const backup={tipo:"SSP15-PM-SD-SDE1-OFFLINE",versao:1,dataSalva:new Date().toISOString(),data};
+        const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+        const url=URL.createObjectURL(blob);
+        const link=document.createElement("a");
+        link.href=url;
+        link.download="backup-painel-pm-sd-"+new Date().toISOString().slice(0,10)+".json";
+        document.body.appendChild(link);link.click();link.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),1500);
+      });
+      upload.addEventListener("click",()=>input.click());
+      input.addEventListener("change",async()=>{
+        const file=input.files&&input.files[0];if(!file)return;
+        try {
+          const backup=JSON.parse(await file.text());
+          const restored=backup?.tipo==="SSP15-PM-SD-SDE1-OFFLINE" ? backup.data : backup;
+          if(!restored||typeof restored!=="object"||!Array.isArray(restored.extracao)){
+            throw new Error("O arquivo não é um backup válido do painel PM/SD.");
+          }
+          if(!window.confirm("Restaurar este backup? Os dados atuais deste computador serão substituídos."))return;
+          data={...JSON.parse(JSON.stringify(originalData)),...restored};
+          data.justificativas=data.justificativas||{};
+          data.baseOperacional=Array.isArray(data.baseOperacional)?data.baseOperacional:[];
+          data.baseHistorico=Array.isArray(data.baseHistorico)?data.baseHistorico:[];
+          data.ondas=sanitizeWaves(data.ondas||[]);
+          data.horarios={...(originalData.horarios||{}),...(data.horarios||{}),...horariosOficiais};
+          data.carregamentoInicio=data.carregamentoInicio||{};
+          data.carregamentoFim=data.carregamentoFim||{};
+          currentWave=data.ondas[0]||"PM Onda 1";
+          rebuildConsolidatedBase(data.extracao||[]);
+          saveData();
+          render();
+          window.alert("Backup restaurado com sucesso.");
+        } catch(error){
+          window.alert("Não foi possível importar o backup: "+error.message);
+        } finally { input.value=""; }
+      });
+      actions.appendChild(download);
+      actions.appendChild(upload);
+      actions.appendChild(input);
+    }
+
     rebuildConsolidatedBase(data.extracao || []);
     render();
-    initializeFirebase();
+    updateAuthBadge();
+    setupOfflineControls();
     setInterval(() => {
       document.getElementById("footerUpdate").textContent = `${data.data || ""} ${currentTimeLabel()}`.trim();
       renderStats();
